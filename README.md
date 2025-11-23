@@ -1,6 +1,6 @@
 # planchet
 
-An ergonomic Rust wrapper for the [Numista API](https://en.numista.com/api/v3/doc/).
+A Rust wrapper for the [Numista API](https://numista.com/api).
 
 ## Installation
 
