@@ -32,6 +32,60 @@ async fn main() {
 }
 ```
 
+### Get issues for a type
+
+```no_run
+use planchet::ClientBuilder;
+
+#[tokio::main]
+async fn main() {
+    let client = ClientBuilder::new()
+        .api_key("YOUR_API_KEY".to_string())
+        .build()
+        .unwrap();
+
+    let response = client.get_issues(420, None).await.unwrap();
+
+    println!("Found {} issues", response.len());
+}
+```
+
+### Get prices for an issue
+
+```no_run
+use planchet::ClientBuilder;
+
+#[tokio::main]
+async fn main() {
+    let client = ClientBuilder::new()
+        .api_key("YOUR_API_KEY".to_string())
+        .build()
+        .unwrap();
+
+    let response = client.get_prices(420, 123, None).await.unwrap();
+
+    println!("Found {} prices", response.prices.len());
+}
+```
+
+### Get a user
+
+```no_run
+use planchet::ClientBuilder;
+
+#[tokio::main]
+async fn main() {
+    let client = ClientBuilder::new()
+        .api_key("YOUR_API_KEY".to_string())
+        .build()
+        .unwrap();
+
+    let response = client.get_user(1, None).await.unwrap();
+
+    println!("Found user {}", response.username);
+}
+```
+
 ## License
 
 This crate is licensed under either of the following, at your option:
