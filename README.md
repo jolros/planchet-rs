@@ -2,6 +2,8 @@
 
 A Rust wrapper for the [Numista API](https://numista.com/api).
 
+This was mostly an excuse to try [Google Jules](https://jules.google) and see what it spit out.
+
 ## Installation
 
 Add the following to your `Cargo.toml` file:
