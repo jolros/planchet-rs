@@ -1,7 +1,5 @@
 //! A Rust wrapper for the Numista API.
 //!
-//! This crate provides a simple and ergonomic way to interact with the Numista API.
-//!
 //! # Examples
 //!
 //! ```no_run
