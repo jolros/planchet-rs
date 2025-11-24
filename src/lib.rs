@@ -81,7 +81,7 @@ impl Client {
         let url = format!("{}/types/{}", self.base_url, type_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<NumistaType>().await?)
     }
@@ -100,7 +100,7 @@ impl Client {
         let url = format!("{}/types/{}/issues", self.base_url, type_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<Vec<models::Issue>>().await?)
     }
@@ -122,7 +122,7 @@ impl Client {
         #[derive(Serialize)]
         struct GetPricesParams<'a> {
             currency: Option<&'a str>,
-            lang: Option<Language>,
+            lang: Option<&'a str>,
         }
 
         let url = format!(
@@ -130,7 +130,8 @@ impl Client {
             self.base_url, type_id, issue_id
         );
 
-        let params = GetPricesParams { currency, lang };
+        let lang_str = lang.and_then(|l| l.to_639_1());
+        let params = GetPricesParams { currency, lang: lang_str };
 
         Ok(self.client.get(&url).query(&params).send().await?.json::<PricesResponse>().await?)
     }
@@ -140,9 +141,9 @@ impl Client {
     /// # Arguments
     ///
     /// * `params` - The search parameters.
-    pub async fn search_types(
+    pub async fn search_types<'a>(
         &self,
-        params: &SearchTypesParams,
+        params: &SearchTypesParams<'a>,
     ) -> Result<SearchTypesResponse> {
         Ok(self
             .client
@@ -163,7 +164,7 @@ impl Client {
         let url = format!("{}/issuers", self.base_url);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<IssuersResponse>().await?)
     }
@@ -177,7 +178,7 @@ impl Client {
         let url = format!("{}/mints", self.base_url);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<MintsResponse>().await?)
     }
@@ -192,7 +193,7 @@ impl Client {
         let url = format!("{}/mints/{}", self.base_url, mint_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<MintDetail>().await?)
     }
@@ -233,7 +234,7 @@ impl Client {
         let url = format!("{}/users/{}", self.base_url, user_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
-            req = req.query(&[("lang", l)]);
+            req = req.query(&[("lang", l.to_639_1())]);
         }
         Ok(req.send().await?.json::<User>().await?)
     }
@@ -564,8 +565,8 @@ impl ClientBuilder {
 
 /// Parameters for searching for types.
 #[derive(Debug, Default, Serialize)]
-pub struct SearchTypesParams {
-    lang: Option<Language>,
+pub struct SearchTypesParams<'a> {
+    lang: Option<&'a str>,
     category: Option<Category>,
     q: Option<String>,
     issuer: Option<String>,
@@ -581,14 +582,14 @@ pub struct SearchTypesParams {
     count: Option<i64>,
 }
 
-impl SearchTypesParams {
+impl<'a> SearchTypesParams<'a> {
     /// Creates a new `SearchTypesParams`.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Sets the language to use for the search.
-    pub fn lang(mut self, lang: Language) -> Self {
+    pub fn lang(mut self, lang: &'a str) -> Self {
         self.lang = Some(lang);
         self
     }
@@ -676,6 +677,7 @@ impl SearchTypesParams {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json;
 
     #[test]
     fn build_client_test() {
@@ -701,6 +703,7 @@ mod tests {
         let url = server.url();
 
         let mock = server.mock("GET", "/types/420")
+          .match_query(mockito::Matcher::UrlEncoded("lang".into(), "de".into()))
           .with_status(200)
           .with_header("content-type", "application/json")
           .with_body(r#"{
@@ -728,7 +731,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(420, None).await.unwrap();
+        let response = client.get_type(420, Some(Language::from_639_1("de").unwrap())).await.unwrap();
 
         mock.assert();
         assert_eq!(response.id, 420);
@@ -745,7 +748,10 @@ mod tests {
         let url = server.url();
 
         let mock = server.mock("GET", "/types")
-          .match_query(mockito::Matcher::UrlEncoded("q".into(), "victoria".into()))
+          .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
+            mockito::Matcher::UrlEncoded("lang".into(), "es".into()),
+          ]))
           .with_status(200)
           .with_header("content-type", "application/json")
           .with_body(r#"{
@@ -772,7 +778,8 @@ mod tests {
             .build()
             .unwrap();
 
-        let params = SearchTypesParams::new().q("victoria");
+        let lang_str = Language::from_639_1("es").unwrap().to_639_1().unwrap();
+        let params = SearchTypesParams::new().q("victoria").lang(lang_str);
         let response = client.search_types(&params).await.unwrap();
 
         mock.assert();
@@ -1183,5 +1190,55 @@ mod tests {
 
         mock.assert();
         assert_eq!(response.access_token, "test");
+    }
+
+    #[tokio::test]
+    async fn search_by_image_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server.mock("POST", "/search_by_image")
+            .match_body(mockito::Matcher::Json(serde_json::json!({
+                "category": null,
+                "images": [
+                    {
+                        "mime_type": "image/jpeg",
+                        "image_data": "jpeg_data"
+                    },
+                    {
+                        "mime_type": "image/png",
+                        "image_data": "png_data"
+                    }
+                ],
+                "max_results": null
+            })))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"count": 0, "types": []}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key".to_string())
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let request = models::SearchByImageRequest {
+            category: None,
+            images: vec![
+                models::Image {
+                    mime_type: models::MimeType::Jpeg,
+                    image_data: "jpeg_data".to_string(),
+                },
+                models::Image {
+                    mime_type: models::MimeType::Png,
+                    image_data: "png_data".to_string(),
+                },
+            ],
+            max_results: None,
+        };
+        client.search_by_image(&request).await.unwrap();
+
+        mock.assert();
     }
 }
