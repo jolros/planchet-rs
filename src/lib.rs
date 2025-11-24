@@ -21,9 +21,9 @@
 pub mod models;
 
 use models::{
-    CataloguesResponse, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken, PricesResponse,
-    Publication, SearchByImageResponse, SearchTypesResponse, User,
+    CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
+    Grade, IssuersResponse, Lang, MintDetail, MintsResponse, NumistaType, OAuthToken,
+    PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Serialize;
@@ -75,20 +75,14 @@ impl Client {
     pub async fn get_type(
         &self,
         type_id: i64,
-        lang: Option<&str>,
+        lang: Option<Lang>,
     ) -> Result<NumistaType> {
-        let mut url = format!("{}/types/{}", self.base_url, type_id);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+        let url = format!("{}/types/{}", self.base_url, type_id);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<NumistaType>()
-            .await?)
+        Ok(req.send().await?.json::<NumistaType>().await?)
     }
 
     /// Gets the issues of a type.
@@ -100,20 +94,14 @@ impl Client {
     pub async fn get_issues(
         &self,
         type_id: i64,
-        lang: Option<&str>,
+        lang: Option<Lang>,
     ) -> Result<Vec<models::Issue>> {
-        let mut url = format!("{}/types/{}/issues", self.base_url, type_id);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+        let url = format!("{}/types/{}/issues", self.base_url, type_id);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<Vec<models::Issue>>()
-            .await?)
+        Ok(req.send().await?.json::<Vec<models::Issue>>().await?)
     }
 
     /// Gets the prices for an issue.
@@ -128,22 +116,22 @@ impl Client {
         type_id: i64,
         issue_id: i64,
         currency: Option<&str>,
+        lang: Option<Lang>,
     ) -> Result<PricesResponse> {
-        let mut url = format!(
+        #[derive(Serialize)]
+        struct GetPricesParams<'a> {
+            currency: Option<&'a str>,
+            lang: Option<Lang>,
+        }
+
+        let url = format!(
             "{}/types/{}/issues/{}/prices",
             self.base_url, type_id, issue_id
         );
-        if let Some(currency) = currency {
-            url.push_str(&format!("?currency={}", currency));
-        }
 
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<PricesResponse>()
-            .await?)
+        let params = GetPricesParams { currency, lang };
+
+        Ok(self.client.get(&url).query(&params).send().await?.json::<PricesResponse>().await?)
     }
 
     /// Searches for types in the Numista catalogue.
@@ -158,7 +146,7 @@ impl Client {
         Ok(self
             .client
             .get(&format!("{}/types", self.base_url))
-            .query(&params.build())
+            .query(params)
             .send()
             .await?
             .json::<SearchTypesResponse>()
@@ -170,19 +158,13 @@ impl Client {
     /// # Arguments
     ///
     /// * `lang` - The language to use for the response.
-    pub async fn get_issuers(&self, lang: Option<&str>) -> Result<IssuersResponse> {
-        let mut url = format!("{}/issuers", self.base_url);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+    pub async fn get_issuers(&self, lang: Option<Lang>) -> Result<IssuersResponse> {
+        let url = format!("{}/issuers", self.base_url);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<IssuersResponse>()
-            .await?)
+        Ok(req.send().await?.json::<IssuersResponse>().await?)
     }
 
     /// Gets the list of mints.
@@ -190,19 +172,13 @@ impl Client {
     /// # Arguments
     ///
     /// * `lang` - The language to use for the response.
-    pub async fn get_mints(&self, lang: Option<&str>) -> Result<MintsResponse> {
-        let mut url = format!("{}/mints", self.base_url);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+    pub async fn get_mints(&self, lang: Option<Lang>) -> Result<MintsResponse> {
+        let url = format!("{}/mints", self.base_url);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<MintsResponse>()
-            .await?)
+        Ok(req.send().await?.json::<MintsResponse>().await?)
     }
 
     /// Gets a single mint.
@@ -211,19 +187,13 @@ impl Client {
     ///
     /// * `mint_id` - The ID of the mint to get.
     /// * `lang` - The language to use for the response.
-    pub async fn get_mint(&self, mint_id: i64, lang: Option<&str>) -> Result<MintDetail> {
-        let mut url = format!("{}/mints/{}", self.base_url, mint_id);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+    pub async fn get_mint(&self, mint_id: i64, lang: Option<Lang>) -> Result<MintDetail> {
+        let url = format!("{}/mints/{}", self.base_url, mint_id);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<MintDetail>()
-            .await?)
+        Ok(req.send().await?.json::<MintDetail>().await?)
     }
 
     /// Gets the list of catalogues.
@@ -258,19 +228,13 @@ impl Client {
     ///
     /// * `user_id` - The ID of the user to get.
     /// * `lang` - The language to use for the response.
-    pub async fn get_user(&self, user_id: i64, lang: Option<&str>) -> Result<User> {
-        let mut url = format!("{}/users/{}", self.base_url, user_id);
-        if let Some(lang) = lang {
-            url.push_str(&format!("?lang={}", lang));
+    pub async fn get_user(&self, user_id: i64, lang: Option<Lang>) -> Result<User> {
+        let url = format!("{}/users/{}", self.base_url, user_id);
+        let mut req = self.client.get(&url);
+        if let Some(l) = lang {
+            req = req.query(&[("lang", l)]);
         }
-
-        Ok(self
-            .client
-            .get(&url)
-            .send()
-            .await?
-            .json::<User>()
-            .await?)
+        Ok(req.send().await?.json::<User>().await?)
     }
 
     /// Gets the collections of a user.
@@ -305,7 +269,7 @@ impl Client {
                 "{}/users/{}/collected_items",
                 self.base_url, user_id
             ))
-            .query(&params.build())
+            .query(params)
             .send()
             .await?
             .json::<CollectedItemsResponse>()
@@ -419,7 +383,7 @@ impl Client {
     /// # Arguments
     ///
     /// * `request` - The request body.
-    pub async fn search_by_image(&self, request: &SearchByImageRequest) -> Result<SearchByImageResponse> {
+    pub async fn search_by_image(&self, request: &models::SearchByImageRequest) -> Result<SearchByImageResponse> {
         Ok(self
             .client
             .post(&format!("{}/search_by_image", self.base_url))
@@ -431,22 +395,11 @@ impl Client {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct SearchByImageRequest {
-    pub category: Option<String>,
-    pub images: Vec<Image>,
-    pub max_results: Option<i64>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct Image {
-    pub mime_type: String,
-    pub image_data: String,
-}
+use rust_decimal::Decimal;
 
 #[derive(Debug, Serialize)]
 pub struct OAuthTokenParams {
-    pub grant_type: String,
+    pub grant_type: models::GrantType,
     pub code: Option<String>,
     pub client_id: Option<String>,
     pub client_secret: Option<String>,
@@ -456,7 +409,7 @@ pub struct OAuthTokenParams {
 
 #[derive(Debug, Default, Serialize)]
 pub struct GetCollectedItemsParams {
-    category: Option<String>,
+    category: Option<models::Category>,
     #[serde(rename = "type")]
     type_id: Option<i64>,
     collection: Option<i64>,
@@ -467,8 +420,8 @@ impl GetCollectedItemsParams {
         Self::default()
     }
 
-    pub fn category(mut self, category: &str) -> Self {
-        self.category = Some(category.to_string());
+    pub fn category(mut self, category: models::Category) -> Self {
+        self.category = Some(category);
         self
     }
 
@@ -482,19 +435,6 @@ impl GetCollectedItemsParams {
         self
     }
 
-    fn build(&self) -> Vec<(&str, String)> {
-        let mut params = Vec::new();
-        if let Some(category) = &self.category {
-            params.push(("category", category.clone()));
-        }
-        if let Some(type_id) = &self.type_id {
-            params.push(("type", type_id.to_string()));
-        }
-        if let Some(collection) = &self.collection {
-            params.push(("collection", collection.to_string()));
-        }
-        params
-    }
 }
 
 #[derive(Debug, Serialize)]
@@ -503,7 +443,7 @@ pub struct AddCollectedItem {
     pub type_id: i64,
     pub issue: Option<i64>,
     pub quantity: Option<i64>,
-    pub grade: Option<String>,
+    pub grade: Option<Grade>,
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
@@ -511,11 +451,11 @@ pub struct AddCollectedItem {
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
-    pub acquisition_date: Option<String>,
+    pub acquisition_date: Option<chrono::NaiveDate>,
     pub serial_number: Option<String>,
     pub internal_id: Option<String>,
-    pub weight: Option<f64>,
-    pub size: Option<f64>,
+    pub weight: Option<Decimal>,
+    pub size: Option<Decimal>,
     pub axis: Option<i64>,
     pub grading_details: Option<GradingDetails>,
 }
@@ -526,7 +466,7 @@ pub struct EditCollectedItem {
     pub type_id: Option<i64>,
     pub issue: Option<i64>,
     pub quantity: Option<i64>,
-    pub grade: Option<String>,
+    pub grade: Option<Grade>,
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
@@ -534,18 +474,18 @@ pub struct EditCollectedItem {
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
-    pub acquisition_date: Option<String>,
+    pub acquisition_date: Option<chrono::NaiveDate>,
     pub serial_number: Option<String>,
     pub internal_id: Option<String>,
-    pub weight: Option<f64>,
-    pub size: Option<f64>,
+    pub weight: Option<Decimal>,
+    pub size: Option<Decimal>,
     pub axis: Option<i64>,
     pub grading_details: Option<GradingDetails>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct ItemPrice {
-    pub value: f64,
+    pub value: Decimal,
     pub currency: String,
 }
 
@@ -622,10 +562,10 @@ impl ClientBuilder {
 }
 
 /// Parameters for searching for types.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct SearchTypesParams {
-    lang: Option<String>,
-    category: Option<String>,
+    lang: Option<Lang>,
+    category: Option<Category>,
     q: Option<String>,
     issuer: Option<String>,
     catalogue: Option<i64>,
@@ -647,14 +587,14 @@ impl SearchTypesParams {
     }
 
     /// Sets the language to use for the search.
-    pub fn lang(mut self, lang: &str) -> Self {
-        self.lang = Some(lang.to_string());
+    pub fn lang(mut self, lang: Lang) -> Self {
+        self.lang = Some(lang);
         self
     }
 
     /// Sets the category to search in.
-    pub fn category(mut self, category: &str) -> Self {
-        self.category = Some(category.to_string());
+    pub fn category(mut self, category: Category) -> Self {
+        self.category = Some(category);
         self
     }
 
@@ -730,52 +670,6 @@ impl SearchTypesParams {
         self
     }
 
-    fn build(&self) -> Vec<(&str, String)> {
-        let mut params = Vec::new();
-        if let Some(lang) = &self.lang {
-            params.push(("lang", lang.clone()));
-        }
-        if let Some(category) = &self.category {
-            params.push(("category", category.clone()));
-        }
-        if let Some(q) = &self.q {
-            params.push(("q", q.clone()));
-        }
-        if let Some(issuer) = &self.issuer {
-            params.push(("issuer", issuer.clone()));
-        }
-        if let Some(catalogue) = &self.catalogue {
-            params.push(("catalogue", catalogue.to_string()));
-        }
-        if let Some(number) = &self.number {
-            params.push(("number", number.clone()));
-        }
-        if let Some(ruler) = &self.ruler {
-            params.push(("ruler", ruler.to_string()));
-        }
-        if let Some(material) = &self.material {
-            params.push(("material", material.to_string()));
-        }
-        if let Some(year) = &self.year {
-            params.push(("year", year.clone()));
-        }
-        if let Some(date) = &self.date {
-            params.push(("date", date.clone()));
-        }
-        if let Some(size) = &self.size {
-            params.push(("size", size.clone()));
-        }
-        if let Some(weight) = &self.weight {
-            params.push(("weight", weight.clone()));
-        }
-        if let Some(page) = &self.page {
-            params.push(("page", page.to_string()));
-        }
-        if let Some(count) = &self.count {
-            params.push(("count", count.to_string()));
-        }
-        params
-    }
 }
 
 #[cfg(test)]
@@ -849,7 +743,8 @@ mod tests {
         let mut server = mockito::Server::new_async().await;
         let url = server.url();
 
-        let mock = server.mock("GET", "/types?q=victoria")
+        let mock = server.mock("GET", "/types")
+          .match_query(mockito::Matcher::UrlEncoded("q".into(), "victoria".into()))
           .with_status(200)
           .with_header("content-type", "application/json")
           .with_body(r#"{
@@ -926,7 +821,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_prices(420, 123, None).await.unwrap();
+        let response = client.get_prices(420, 123, None, None).await.unwrap();
 
         mock.assert();
         assert_eq!(response.currency, "USD");
@@ -1038,7 +933,7 @@ mod tests {
         let mock = server.mock("GET", "/publications/L106610")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{"id": "L106610", "url": "", "type": "volume", "title": "Test", "languages": []}"#)
+            .with_body(r#"{"id": "L106610", "url": "https://example.com", "type": "volume", "title": "Test", "languages": []}"#)
             .create();
 
         let client = ClientBuilder::new()
@@ -1262,7 +1157,8 @@ mod tests {
         let mut server = mockito::Server::new_async().await;
         let url = server.url();
 
-        let mock = server.mock("GET", "/oauth_token?grant_type=client_credentials")
+        let mock = server.mock("GET", "/oauth_token")
+            .match_query(mockito::Matcher::UrlEncoded("grant_type".into(), "client_credentials".into()))
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body(r#"{"access_token": "test", "token_type": "bearer", "expires_in": 3600, "user_id": 1}"#)
@@ -1275,7 +1171,7 @@ mod tests {
             .unwrap();
 
         let params = OAuthTokenParams {
-            grant_type: "client_credentials".to_string(),
+            grant_type: models::GrantType::ClientCredentials,
             code: None,
             client_id: None,
             client_secret: None,
