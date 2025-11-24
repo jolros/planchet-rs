@@ -27,7 +27,7 @@ use models::{
     PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use std::fmt;
 
 /// The error type for this crate.
@@ -66,6 +66,16 @@ pub struct Client {
     base_url: String,
 }
 
+macro_rules! add_lang_param {
+    ($req:expr, $lang:expr) => {
+        if let Some(l) = $lang {
+            $req.query(&[("lang", l.to_639_1())])
+        } else {
+            $req
+        }
+    };
+}
+
 impl Client {
     /// Gets a single type from the Numista catalogue.
     ///
@@ -79,10 +89,8 @@ impl Client {
         lang: Option<Language>,
     ) -> Result<NumistaType> {
         let url = format!("{}/types/{}", self.base_url, type_id);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<NumistaType>().await?)
     }
 
@@ -98,10 +106,8 @@ impl Client {
         lang: Option<Language>,
     ) -> Result<Vec<models::Issue>> {
         let url = format!("{}/types/{}/issues", self.base_url, type_id);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<Vec<models::Issue>>().await?)
     }
 
@@ -141,9 +147,9 @@ impl Client {
     /// # Arguments
     ///
     /// * `params` - The search parameters.
-    pub async fn search_types<'a>(
+    pub async fn search_types(
         &self,
-        params: &SearchTypesParams<'a>,
+        params: &SearchTypesParams,
     ) -> Result<SearchTypesResponse> {
         Ok(self
             .client
@@ -162,10 +168,8 @@ impl Client {
     /// * `lang` - The language to use for the response.
     pub async fn get_issuers(&self, lang: Option<Language>) -> Result<IssuersResponse> {
         let url = format!("{}/issuers", self.base_url);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<IssuersResponse>().await?)
     }
 
@@ -176,10 +180,8 @@ impl Client {
     /// * `lang` - The language to use for the response.
     pub async fn get_mints(&self, lang: Option<Language>) -> Result<MintsResponse> {
         let url = format!("{}/mints", self.base_url);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<MintsResponse>().await?)
     }
 
@@ -191,10 +193,8 @@ impl Client {
     /// * `lang` - The language to use for the response.
     pub async fn get_mint(&self, mint_id: i64, lang: Option<Language>) -> Result<MintDetail> {
         let url = format!("{}/mints/{}", self.base_url, mint_id);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<MintDetail>().await?)
     }
 
@@ -232,10 +232,8 @@ impl Client {
     /// * `lang` - The language to use for the response.
     pub async fn get_user(&self, user_id: i64, lang: Option<Language>) -> Result<User> {
         let url = format!("{}/users/{}", self.base_url, user_id);
-        let mut req = self.client.get(&url);
-        if let Some(l) = lang {
-            req = req.query(&[("lang", l.to_639_1())]);
-        }
+        let req = self.client.get(&url);
+        let req = add_lang_param!(req, lang);
         Ok(req.send().await?.json::<User>().await?)
     }
 
@@ -563,10 +561,22 @@ impl ClientBuilder {
     }
 }
 
+fn serialize_lang<S>(lang: &Option<Language>, serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    if let Some(l) = lang {
+        serializer.serialize_some(l.to_639_1().unwrap())
+    } else {
+        serializer.serialize_none()
+    }
+}
+
 /// Parameters for searching for types.
 #[derive(Debug, Default, Serialize)]
-pub struct SearchTypesParams<'a> {
-    lang: Option<&'a str>,
+pub struct SearchTypesParams {
+    #[serde(serialize_with = "serialize_lang")]
+    lang: Option<Language>,
     category: Option<Category>,
     q: Option<String>,
     issuer: Option<String>,
@@ -582,14 +592,14 @@ pub struct SearchTypesParams<'a> {
     count: Option<i64>,
 }
 
-impl<'a> SearchTypesParams<'a> {
+impl SearchTypesParams {
     /// Creates a new `SearchTypesParams`.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Sets the language to use for the search.
-    pub fn lang(mut self, lang: &'a str) -> Self {
+    pub fn lang(mut self, lang: Language) -> Self {
         self.lang = Some(lang);
         self
     }
@@ -778,8 +788,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let lang_str = Language::from_639_1("es").unwrap().to_639_1().unwrap();
-        let params = SearchTypesParams::new().q("victoria").lang(lang_str);
+        let params = SearchTypesParams::new().q("victoria").lang(Language::from_639_1("es").unwrap());
         let response = client.search_types(&params).await.unwrap();
 
         mock.assert();
