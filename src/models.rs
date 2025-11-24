@@ -1,15 +1,10 @@
 use chrono::NaiveDate;
+use iso_currency::Currency as IsoCurrency;
+use isolang::Language;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Lang {
-    En,
-    Es,
-    Fr,
-}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -62,7 +57,7 @@ pub enum GrantType {
 pub struct Mark {
     pub id: i64,
     pub title: Option<String>,
-    pub picture: Option<String>,
+    pub picture: Option<Url>,
     pub letters: Option<String>,
 }
 
@@ -81,12 +76,12 @@ pub struct GradePrice {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ItemPrice {
     pub value: Decimal,
-    pub currency: String,
+    pub currency: IsoCurrency,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PricesResponse {
-    pub currency: String,
+    pub currency: IsoCurrency,
     pub prices: Vec<GradePrice>,
 }
 
@@ -97,7 +92,7 @@ pub struct IssuerDetail {
     pub flag: Option<Url>,
     pub wikidata_id: Option<String>,
     pub parent: Option<Issuer>,
-    pub level: Option<i64>,
+    pub level: Option<i8>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -264,6 +259,7 @@ pub struct NumistaType {
     pub printers: Option<Vec<Printer>>,
     pub series: Option<String>,
     pub commemorated_topic: Option<String>,
+    /// HTML-formatted comments.
     pub comments: Option<String>,
     pub related_types: Option<Vec<RelatedType>>,
     pub tags: Vec<String>,
@@ -332,7 +328,7 @@ pub struct Publication {
     pub subtitle: Option<String>,
     pub translated_subtitle: Option<String>,
     pub edition: Option<String>,
-    pub languages: Vec<String>,
+    pub languages: Vec<Language>,
     pub year: Option<i32>,
     pub page_count: Option<i64>,
     pub pages: Option<String>,
@@ -345,6 +341,7 @@ pub struct Publication {
     pub publishers: Option<Vec<Publisher>>,
     pub publication_places: Option<Vec<PublicationPlace>>,
     pub part_of: Option<Vec<PublicationPart>>,
+    /// HTML-formatted bibliographical notice.
     pub bibliographical_notice: Option<String>,
     pub homepage_url: Option<Url>,
     pub download_urls: Option<Vec<Url>>,
@@ -501,8 +498,18 @@ pub struct SearchByImageRequest {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MimeType {
+    #[serde(rename = "image/jpeg")]
+    Jpeg,
+    #[serde(rename = "image/png")]
+    Png,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Image {
-    pub mime_type: String,
+    pub mime_type: MimeType,
+    /// The image data, Base64-encoded.
     pub image_data: String,
 }
 

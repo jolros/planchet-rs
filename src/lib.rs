@@ -20,9 +20,10 @@
 //! ```
 pub mod models;
 
+use isolang::Language;
 use models::{
     CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    Grade, IssuersResponse, Lang, MintDetail, MintsResponse, NumistaType, OAuthToken,
+    Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken,
     PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -75,7 +76,7 @@ impl Client {
     pub async fn get_type(
         &self,
         type_id: i64,
-        lang: Option<Lang>,
+        lang: Option<Language>,
     ) -> Result<NumistaType> {
         let url = format!("{}/types/{}", self.base_url, type_id);
         let mut req = self.client.get(&url);
@@ -94,7 +95,7 @@ impl Client {
     pub async fn get_issues(
         &self,
         type_id: i64,
-        lang: Option<Lang>,
+        lang: Option<Language>,
     ) -> Result<Vec<models::Issue>> {
         let url = format!("{}/types/{}/issues", self.base_url, type_id);
         let mut req = self.client.get(&url);
@@ -116,12 +117,12 @@ impl Client {
         type_id: i64,
         issue_id: i64,
         currency: Option<&str>,
-        lang: Option<Lang>,
+        lang: Option<Language>,
     ) -> Result<PricesResponse> {
         #[derive(Serialize)]
         struct GetPricesParams<'a> {
             currency: Option<&'a str>,
-            lang: Option<Lang>,
+            lang: Option<Language>,
         }
 
         let url = format!(
@@ -158,7 +159,7 @@ impl Client {
     /// # Arguments
     ///
     /// * `lang` - The language to use for the response.
-    pub async fn get_issuers(&self, lang: Option<Lang>) -> Result<IssuersResponse> {
+    pub async fn get_issuers(&self, lang: Option<Language>) -> Result<IssuersResponse> {
         let url = format!("{}/issuers", self.base_url);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
@@ -172,7 +173,7 @@ impl Client {
     /// # Arguments
     ///
     /// * `lang` - The language to use for the response.
-    pub async fn get_mints(&self, lang: Option<Lang>) -> Result<MintsResponse> {
+    pub async fn get_mints(&self, lang: Option<Language>) -> Result<MintsResponse> {
         let url = format!("{}/mints", self.base_url);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
@@ -187,7 +188,7 @@ impl Client {
     ///
     /// * `mint_id` - The ID of the mint to get.
     /// * `lang` - The language to use for the response.
-    pub async fn get_mint(&self, mint_id: i64, lang: Option<Lang>) -> Result<MintDetail> {
+    pub async fn get_mint(&self, mint_id: i64, lang: Option<Language>) -> Result<MintDetail> {
         let url = format!("{}/mints/{}", self.base_url, mint_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
@@ -228,7 +229,7 @@ impl Client {
     ///
     /// * `user_id` - The ID of the user to get.
     /// * `lang` - The language to use for the response.
-    pub async fn get_user(&self, user_id: i64, lang: Option<Lang>) -> Result<User> {
+    pub async fn get_user(&self, user_id: i64, lang: Option<Language>) -> Result<User> {
         let url = format!("{}/users/{}", self.base_url, user_id);
         let mut req = self.client.get(&url);
         if let Some(l) = lang {
@@ -564,7 +565,7 @@ impl ClientBuilder {
 /// Parameters for searching for types.
 #[derive(Debug, Default, Serialize)]
 pub struct SearchTypesParams {
-    lang: Option<Lang>,
+    lang: Option<Language>,
     category: Option<Category>,
     q: Option<String>,
     issuer: Option<String>,
@@ -587,7 +588,7 @@ impl SearchTypesParams {
     }
 
     /// Sets the language to use for the search.
-    pub fn lang(mut self, lang: Lang) -> Self {
+    pub fn lang(mut self, lang: Language) -> Self {
         self.lang = Some(lang);
         self
     }
@@ -824,7 +825,7 @@ mod tests {
         let response = client.get_prices(420, 123, None, None).await.unwrap();
 
         mock.assert();
-        assert_eq!(response.currency, "USD");
+        assert_eq!(response.currency, iso_currency::Currency::USD);
     }
 
     #[tokio::test]
