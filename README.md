@@ -1,12 +1,17 @@
 # planchet
 
-A Rust wrapper for the [Numista API](https://numista.com/api). See also the CLI tool using this, [planchet-rs](https://github.com/jolros/planchet-rs).
+This repository contains two crates:
+
+* `planchet`: A Rust wrapper for the [Numista API](https://numista.com/api).
+* `planchet-cli`: A command-line interface for the `planchet` library.
 
 This was mostly an excuse to try [Google Jules](https://jules.google) and see what it spit out.
 
 **This is an exploratory test and a learning exercise. It won't be stable, likely be error-prone, and shouldn't be used outside of this experiment.**
 
-## Installation
+## `planchet` library
+
+### Installation
 
 Add the following to your `Cargo.toml` file:
 
@@ -15,7 +20,7 @@ Add the following to your `Cargo.toml` file:
 planchet = "0.1.0"
 ```
 
-## Usage
+### Usage
 
 ```no_run
 use planchet::{ClientBuilder, SearchTypesParams};
@@ -34,63 +39,50 @@ async fn main() {
 }
 ```
 
-### Get issues for a type
+## `planchet-cli`
 
-```no_run
-use planchet::ClientBuilder;
+### Installation
 
-#[tokio::main]
-async fn main() {
-    let client = ClientBuilder::new()
-        .api_key("YOUR_API_KEY".to_string())
-        .build()
-        .unwrap();
-
-    let response = client.get_issues(420, None).await.unwrap();
-
-    println!("Found {} issues", response.len());
-}
+```bash
+cargo install planchet-cli
 ```
 
-### Get prices for an issue
+### Usage
 
-```no_run
-use planchet::ClientBuilder;
-
-#[tokio::main]
-async fn main() {
-    let client = ClientBuilder::new()
-        .api_key("YOUR_API_KEY".to_string())
-        .build()
-        .unwrap();
-
-    let response = client.get_prices(420, 123, None).await.unwrap();
-
-    println!("Found {} prices", response.prices.len());
-}
+```bash
+planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
 ```
 
-### Get a user
+### Commands
 
-```no_run
-use planchet::ClientBuilder;
+#### `dump`
 
-#[tokio::main]
-async fn main() {
-    let client = ClientBuilder::new()
-        .api_key("YOUR_API_KEY".to_string())
-        .build()
-        .unwrap();
+Dumps the user's collection to the console, sorted by issuer name, year, and title.
 
-    let response = client.get_user(1, None).await.unwrap();
+```bash
+$ planchet-cli --api-key my-secret-key --user-id 123 dump
+Canada - 5 Cents - Victoria (1858)
+Canada - 1 Cent - George V (1920)
+```
 
-    println!("Found user {}", response.username);
-}
+#### `summarize`
+
+Summarizes the user's collection by issuer, showing the total number of items, the oldest item, and the newest item.
+
+```bash
+$ planchet-cli --api-key my-secret-key --user-id 123 summarize
++--------+-------------+-------------+-------------+
+| Issuer | Total Items | Oldest Item | Newest Item |
++--------+-------------+-------------+-------------+
+| Canada | 2           | 1858        | 1920        |
++--------+-------------+-------------+-------------+
 ```
 
 ## License
 
-This crate is licensed under either of the following, at your option:
+This project is licensed under either of
 
-* Apache License, Version 2.0
-* MIT license
+* Apache License, Version 2.0, (LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+* MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
+
+at your option.
