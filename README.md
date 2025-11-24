@@ -1,6 +1,6 @@
 # planchet
 
-A Rust wrapper for the [Numista API](https://numista.com/api).
+A Rust wrapper for the [Numista API](https://numista.com/api). See also the CLI tool using this, [planchet-rs](https://github.com/jolros/planchet-rs).
 
 This was mostly an excuse to try [Google Jules](https://jules.google) and see what it spit out.
 
