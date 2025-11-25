@@ -112,12 +112,15 @@ async fn dump_command_test() {
         )
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
         .create();
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
+        .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
         .create();
 
@@ -250,12 +253,15 @@ async fn summarize_command_test() {
         )
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
         .create();
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
+        .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
         .create();
 
@@ -287,6 +293,7 @@ async fn api_error_test() {
             "/oauth_token?grant_type=client_credentials&scope=view_collection",
         )
         .with_status(500)
+        .with_header("Numista-API-Key", "test_key")
         .create();
 
     let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
