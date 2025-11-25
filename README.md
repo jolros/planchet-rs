@@ -1,5 +1,7 @@
 # planchet
 
+[![Documentation](https://img.shields.io/badge/docs-main-blue)](https://jolros.github.io/planchet-rs/)
+
 Interact with the [Numista API](https://numista.com) in Rust.
 
 This repository contains two crates:
