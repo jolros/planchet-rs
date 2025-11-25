@@ -17,7 +17,7 @@ Add the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-planchet = "0.1.0"
+planchet = { git = "https://github.com/jolros/planchet-rs.git", branch = "main" }
 ```
 
 ### Usage
@@ -44,7 +44,7 @@ async fn main() {
 ### Installation
 
 ```bash
-cargo install planchet-cli
+cargo install --git https://github.com/jolros/planchet-rs.git planchet-cli
 ```
 
 ### Usage
