@@ -127,7 +127,7 @@ async fn dump_command_test() {
         .create_async()
         .await;
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -269,7 +269,7 @@ async fn summarize_command_test() {
         .create_async()
         .await;
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -301,7 +301,7 @@ async fn api_error_test() {
         .create_async()
         .await;
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -316,7 +316,7 @@ async fn api_error_test() {
 #[tokio::test]
 async fn test_no_api_key() {
     env::remove_var("NUMISTA_API_KEY");
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--user-id")
         .arg("123")
         .arg("dump")
@@ -341,7 +341,7 @@ async fn test_api_key_from_arg() {
         .await;
 
     env::remove_var("NUMISTA_API_KEY");
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("arg_key")
         .arg("--user-id")
@@ -370,7 +370,7 @@ async fn test_api_key_from_env() {
         .await;
 
     env::set_var("NUMISTA_API_KEY", "env_key");
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--user-id")
         .arg("123")
         .arg("dump")
@@ -398,7 +398,7 @@ async fn test_api_key_precedence() {
         .await;
 
     env::set_var("NUMISTA_API_KEY", "env_key");
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("arg_key")
         .arg("--user-id")
