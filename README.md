@@ -22,7 +22,7 @@ planchet = "0.1.0"
 
 ### Usage
 
-```no_run
+```rust
 use planchet::{ClientBuilder, SearchTypesParams};
 
 #[tokio::main]
