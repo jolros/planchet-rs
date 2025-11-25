@@ -1,3 +1,39 @@
+//! A command-line interface for the `planchet` library.
+//!
+//! This tool provides commands to fetch and display a user's coin collection
+//! data from the Numista API.
+//!
+//! # Usage
+//!
+//! ```bash
+//! planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
+//! ```
+//!
+//! # Commands
+//!
+//! ## `dump`
+//!
+//! Dumps the user's collection to the console, sorted by issuer name, year, and title.
+//!
+//! ```bash
+//! $ planchet-cli --api-key my-secret-key --user-id 123 dump
+//! Canada - 5 Cents - Victoria (1858)
+//! Canada - 1 Cent - George V (1920)
+//! ```
+//!
+//! ## `summarize`
+//!
+//! Summarizes the user's collection by issuer, showing the total number of items,
+//! the oldest item, and the newest item.
+//!
+//! ```bash
+//! $ planchet-cli --api-key my-secret-key --user-id 123 summarize
+//! +--------+-------------+-------------+-------------+
+//! | Issuer | Total Items | Oldest Item | Newest Item |
+//! +--------+-------------+-------------+-------------+
+//! | Canada | 2           | 1858        | 1920        |
+//! +--------+-------------+-------------+-------------+
+//! ```
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use planchet::{
