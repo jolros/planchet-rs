@@ -1,7 +1,9 @@
-use assert_cmd::Command;
+use assert_cmd::prelude::*;
 use mockito::Server;
 use predicates::prelude::*;
 use serde_json::json;
+use std::env;
+use std::process::Command;
 
 #[tokio::test]
 async fn dump_command_test() {
@@ -114,16 +116,18 @@ async fn dump_command_test() {
         .with_header("content-type", "application/json")
         .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
-        .create();
+        .create_async()
+        .await;
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
         .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
-        .create();
+        .create_async()
+        .await;
 
-    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -254,16 +258,18 @@ async fn summarize_command_test() {
         .with_header("content-type", "application/json")
         .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
-        .create();
+        .create_async()
+        .await;
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
         .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
-        .create();
+        .create_async()
+        .await;
 
-    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -292,9 +298,10 @@ async fn api_error_test() {
         )
         .with_header("Numista-API-Key", "test_key")
         .with_status(500)
-        .create();
+        .create_async()
+        .await;
 
-    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -304,4 +311,103 @@ async fn api_error_test() {
     cmd.assert()
         .failure()
         .stderr(predicate::str::contains("HTTP error"));
+}
+
+#[tokio::test]
+async fn test_no_api_key() {
+    env::remove_var("NUMISTA_API_KEY");
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    cmd.arg("--user-id")
+        .arg("123")
+        .arg("dump")
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("error: Numista API key not found. Please provide it via the --api-key argument or the NUMISTA_API_KEY environment variable."));
+}
+
+#[tokio::test]
+async fn test_api_key_from_arg() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock(
+            "GET",
+            "/oauth_token?grant_type=client_credentials&scope=view_collection",
+        )
+        .with_header("Numista-API-Key", "arg_key")
+        .with_status(200)
+        .create_async()
+        .await;
+
+    env::remove_var("NUMISTA_API_KEY");
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    cmd.arg("--api-key")
+        .arg("arg_key")
+        .arg("--user-id")
+        .arg("123")
+        .arg("dump")
+        .env("NUMISTA_API_URL", url)
+        .assert()
+        .failure();
+
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_api_key_from_env() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock(
+            "GET",
+            "/oauth_token?grant_type=client_credentials&scope=view_collection",
+        )
+        .with_header("Numista-API-Key", "env_key")
+        .with_status(200)
+        .create_async()
+        .await;
+
+    env::set_var("NUMISTA_API_KEY", "env_key");
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    cmd.arg("--user-id")
+        .arg("123")
+        .arg("dump")
+        .env("NUMISTA_API_URL", url)
+        .assert()
+        .failure();
+    env::remove_var("NUMISTA_API_KEY");
+
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_api_key_precedence() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock(
+            "GET",
+            "/oauth_token?grant_type=client_credentials&scope=view_collection",
+        )
+        .with_header("Numista-API-Key", "arg_key")
+        .with_status(200)
+        .create_async()
+        .await;
+
+    env::set_var("NUMISTA_API_KEY", "env_key");
+    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    cmd.arg("--api-key")
+        .arg("arg_key")
+        .arg("--user-id")
+        .arg("123")
+        .arg("dump")
+        .env("NUMISTA_API_URL", url)
+        .assert()
+        .failure();
+    env::remove_var("NUMISTA_API_KEY");
+
+    mock.assert_async().await;
 }
