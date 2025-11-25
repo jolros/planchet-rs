@@ -5,6 +5,8 @@
 //!
 //! # Usage
 //!
+//! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
+//!
 //! ```bash
 //! planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
 //! ```
@@ -78,8 +80,8 @@ async fn fetch_collection(api_key: String, user_id: i64) -> Result<Vec<Collected
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Your Numista API key.
-    #[arg(short, long)]
+    /// Your Numista API key. Can also be provided via the NUMISTA_API_KEY environment variable.
+    #[arg(short, long, env = "NUMISTA_API_KEY")]
     api_key: String,
 
     /// The ID of the user to fetch the collection for.
