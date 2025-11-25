@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Commands"],"fn":["build_client","dump_collection","fetch_collection","get_gregorian_year","get_issuer_name","get_year","main","summarize_collection"],"struct":["Cli","IssuerSummary"]};
