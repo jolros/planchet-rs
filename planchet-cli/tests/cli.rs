@@ -322,7 +322,7 @@ async fn test_no_api_key() {
         .arg("dump")
         .assert()
         .failure()
-        .stderr(predicates::str::contains("error: Numista API key not found. Please provide it via the --api-key argument or the NUMISTA_API_KEY environment variable."));
+        .stderr(predicates::str::contains("the following required arguments were not provided"));
 }
 
 #[tokio::test]

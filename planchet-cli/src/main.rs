@@ -79,8 +79,8 @@ async fn fetch_collection(api_key: String, user_id: i64) -> Result<Vec<Collected
 #[command(author, version, about, long_about = None)]
 struct Cli {
     /// Your Numista API key. Can also be provided via the NUMISTA_API_KEY environment variable.
-    #[arg(short, long)]
-    api_key: Option<String>,
+    #[arg(short, long, env = "NUMISTA_API_KEY")]
+    api_key: String,
 
     /// The ID of the user to fetch the collection for.
     #[arg(long)]
@@ -206,12 +206,9 @@ async fn summarize_collection(api_key: String, user_id: i64) -> Result<()> {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let api_key = cli.api_key.or_else(|| env::var("NUMISTA_API_KEY").ok())
-        .ok_or_else(|| anyhow::anyhow!("error: Numista API key not found. Please provide it via the --api-key argument or the NUMISTA_API_KEY environment variable."))?;
-
     match cli.command {
-        Commands::Dump => dump_collection(api_key, cli.user_id).await?,
-        Commands::Summarize => summarize_collection(api_key, cli.user_id).await?,
+        Commands::Dump => dump_collection(cli.api_key, cli.user_id).await?,
+        Commands::Summarize => summarize_collection(cli.api_key, cli.user_id).await?,
     }
 
     Ok(())
