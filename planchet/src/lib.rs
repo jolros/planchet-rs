@@ -22,12 +22,12 @@ pub mod models;
 
 use isolang::Language;
 use models::{
-    CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken,
+    ApiError, CataloguesResponse, Category, CollectedItem, CollectedItemsResponse,
+    CollectionsResponse, Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken,
     PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
-use serde::{Serialize, Serializer};
+use serde::{de::DeserializeOwned, Serialize, Serializer};
 use std::fmt;
 
 /// The error type for this crate.
@@ -37,6 +37,8 @@ pub enum Error {
     Http(reqwest::Error),
     /// The API key was not provided.
     ApiKeyMissing,
+    /// An error from the Numista API.
+    ApiError { message: String, status: u16 },
 }
 
 impl fmt::Display for Error {
@@ -44,6 +46,9 @@ impl fmt::Display for Error {
         match self {
             Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
+            Error::ApiError { message, status } => {
+                write!(f, "API error (status {}): {}", status, message)
+            }
         }
     }
 }
@@ -64,6 +69,22 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Client {
     client: reqwest::Client,
     base_url: String,
+}
+
+async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> Result<T> {
+    let status = response.status();
+    if status.is_success() {
+        Ok(response.json::<T>().await?)
+    } else {
+        let status_code = status.as_u16();
+        match response.json::<ApiError>().await {
+            Ok(api_error) => Err(Error::ApiError {
+                message: api_error.error_message,
+                status: status_code,
+            }),
+            Err(e) => Err(e.into()),
+        }
+    }
 }
 
 macro_rules! add_lang_param {
@@ -91,7 +112,8 @@ impl Client {
         let url = format!("{}/types/{}", self.base_url, type_id);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<NumistaType>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets the issues of a type.
@@ -108,7 +130,8 @@ impl Client {
         let url = format!("{}/types/{}/issues", self.base_url, type_id);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<Vec<models::Issue>>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets the prices for an issue.
@@ -137,9 +160,13 @@ impl Client {
         );
 
         let lang_str = lang.and_then(|l| l.to_639_1());
-        let params = GetPricesParams { currency, lang: lang_str };
+        let params = GetPricesParams {
+            currency,
+            lang: lang_str,
+        };
 
-        Ok(self.client.get(&url).query(&params).send().await?.json::<PricesResponse>().await?)
+        let response = self.client.get(&url).query(&params).send().await?;
+        process_response(response).await
     }
 
     /// Searches for types in the Numista catalogue.
@@ -151,14 +178,13 @@ impl Client {
         &self,
         params: &SearchTypesParams,
     ) -> Result<SearchTypesResponse> {
-        Ok(self
+        let response = self
             .client
             .get(&format!("{}/types", self.base_url))
             .query(params)
             .send()
-            .await?
-            .json::<SearchTypesResponse>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Gets the list of issuers.
@@ -170,7 +196,8 @@ impl Client {
         let url = format!("{}/issuers", self.base_url);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<IssuersResponse>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets the list of mints.
@@ -182,7 +209,8 @@ impl Client {
         let url = format!("{}/mints", self.base_url);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<MintsResponse>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets a single mint.
@@ -195,18 +223,18 @@ impl Client {
         let url = format!("{}/mints/{}", self.base_url, mint_id);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<MintDetail>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets the list of catalogues.
     pub async fn get_catalogues(&self) -> Result<CataloguesResponse> {
-        Ok(self
+        let response = self
             .client
             .get(&format!("{}/catalogues", self.base_url))
             .send()
-            .await?
-            .json::<CataloguesResponse>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Gets a single publication.
@@ -215,13 +243,12 @@ impl Client {
     ///
     /// * `id` - The ID of the publication to get.
     pub async fn get_publication(&self, id: &str) -> Result<Publication> {
-        Ok(self
+        let response = self
             .client
             .get(&format!("{}/publications/{}", self.base_url, id))
             .send()
-            .await?
-            .json::<Publication>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Gets a user.
@@ -234,7 +261,8 @@ impl Client {
         let url = format!("{}/users/{}", self.base_url, user_id);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
-        Ok(req.send().await?.json::<User>().await?)
+        let response = req.send().await?;
+        process_response(response).await
     }
 
     /// Gets the collections of a user.
@@ -243,13 +271,12 @@ impl Client {
     ///
     /// * `user_id` - The ID of the user to get the collections for.
     pub async fn get_user_collections(&self, user_id: i64) -> Result<CollectionsResponse> {
-        Ok(self
+        let response = self
             .client
             .get(&format!("{}/users/{}/collections", self.base_url, user_id))
             .send()
-            .await?
-            .json::<CollectionsResponse>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Gets the collected items of a user.
@@ -263,7 +290,7 @@ impl Client {
         user_id: i64,
         params: &GetCollectedItemsParams,
     ) -> Result<CollectedItemsResponse> {
-        Ok(self
+        let response = self
             .client
             .get(&format!(
                 "{}/users/{}/collected_items",
@@ -271,9 +298,8 @@ impl Client {
             ))
             .query(params)
             .send()
-            .await?
-            .json::<CollectedItemsResponse>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Adds a collected item to a user's collection.
@@ -287,7 +313,7 @@ impl Client {
         user_id: i64,
         item: &AddCollectedItem,
     ) -> Result<CollectedItem> {
-        Ok(self
+        let response = self
             .client
             .post(&format!(
                 "{}/users/{}/collected_items",
@@ -295,9 +321,8 @@ impl Client {
             ))
             .json(item)
             .send()
-            .await?
-            .json::<CollectedItem>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Gets a single collected item from a user's collection.
@@ -307,16 +332,15 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to get.
     pub async fn get_collected_item(&self, user_id: i64, item_id: i64) -> Result<CollectedItem> {
-        Ok(self
+        let response = self
             .client
             .get(&format!(
                 "{}/users/{}/collected_items/{}",
                 self.base_url, user_id, item_id
             ))
             .send()
-            .await?
-            .json::<CollectedItem>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Edits a collected item in a user's collection.
@@ -332,7 +356,7 @@ impl Client {
         item_id: i64,
         item: &EditCollectedItem,
     ) -> Result<CollectedItem> {
-        Ok(self
+        let response = self
             .client
             .patch(&format!(
                 "{}/users/{}/collected_items/{}",
@@ -340,9 +364,8 @@ impl Client {
             ))
             .json(item)
             .send()
-            .await?
-            .json::<CollectedItem>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Deletes a collected item from a user's collection.
@@ -352,14 +375,27 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to delete.
     pub async fn delete_collected_item(&self, user_id: i64, item_id: i64) -> Result<()> {
-        self.client
+        let response = self
+            .client
             .delete(&format!(
                 "{}/users/{}/collected_items/{}",
                 self.base_url, user_id, item_id
             ))
             .send()
             .await?;
-        Ok(())
+
+        if response.status().is_success() {
+            return Ok(());
+        }
+
+        let status_code = response.status().as_u16();
+        match response.json::<ApiError>().await {
+            Ok(api_error) => Err(Error::ApiError {
+                message: api_error.error_message,
+                status: status_code,
+            }),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// Gets an OAuth token.
@@ -368,14 +404,13 @@ impl Client {
     ///
     /// * `params` - The parameters for getting the token.
     pub async fn get_oauth_token(&self, params: &OAuthTokenParams) -> Result<OAuthToken> {
-        Ok(self
+        let response = self
             .client
             .get(&format!("{}/oauth_token", self.base_url))
             .query(params)
             .send()
-            .await?
-            .json::<OAuthToken>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 
     /// Searches for types by image.
@@ -383,15 +418,17 @@ impl Client {
     /// # Arguments
     ///
     /// * `request` - The request body.
-    pub async fn search_by_image(&self, request: &models::SearchByImageRequest) -> Result<SearchByImageResponse> {
-        Ok(self
+    pub async fn search_by_image(
+        &self,
+        request: &models::SearchByImageRequest,
+    ) -> Result<SearchByImageResponse> {
+        let response = self
             .client
             .post(&format!("{}/search_by_image", self.base_url))
             .json(request)
             .send()
-            .await?
-            .json::<SearchByImageResponse>()
-            .await?)
+            .await?;
+        process_response(response).await
     }
 }
 
@@ -1249,5 +1286,36 @@ mod tests {
         client.search_by_image(&request).await.unwrap();
 
         mock.assert();
+    }
+
+    #[tokio::test]
+    async fn api_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/types/420")
+            .with_status(401)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "Invalid API key"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key".to_string())
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_type(420, None).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
+            Error::ApiError { message, status } => {
+                assert_eq!(message, "Invalid API key");
+                assert_eq!(status, 401);
+            }
+            _ => panic!("Expected ApiError"),
+        }
     }
 }
