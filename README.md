@@ -1,8 +1,10 @@
 # planchet
 
+Interact with the [Numista API](https://numista.com) in Rust.
+
 This repository contains two crates:
 
-* `planchet`: A Rust wrapper for the [Numista API](https://numista.com/api).
+* `planchet`: A Rust wrapper for the API.
 * `planchet-cli`: A command-line interface for the `planchet` library.
 
 This was mostly an excuse to try [Google Jules](https://jules.google) and see what it spit out.
