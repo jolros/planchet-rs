@@ -112,16 +112,18 @@ async fn dump_command_test() {
         )
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
         .create();
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
         .create();
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -250,16 +252,18 @@ async fn summarize_command_test() {
         )
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Numista-API-Key", "test_key")
         .with_body(token_response.to_string())
         .create();
     server
         .mock("GET", "/users/1/collected_items")
         .with_status(200)
         .with_header("content-type", "application/json")
+        .with_header("Authorization", "Bearer test_token")
         .with_body(collection_response.to_string())
         .create();
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
@@ -286,10 +290,11 @@ async fn api_error_test() {
             "GET",
             "/oauth_token?grant_type=client_credentials&scope=view_collection",
         )
+        .with_header("Numista-API-Key", "test_key")
         .with_status(500)
         .create();
 
-    let mut cmd = Command::cargo_bin("planchet-cli").unwrap();
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
         .arg("--user-id")
