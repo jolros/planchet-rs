@@ -8,7 +8,7 @@
 //! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
 //!
 //! ```bash
-//! planchet-cli --user-id <USER_ID> <COMMAND>
+//! planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
 //! ```
 //!
 //! # Commands
