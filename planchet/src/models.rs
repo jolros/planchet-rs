@@ -533,3 +533,8 @@ pub struct SearchByImageTypeResult {
     pub reverse_thumbnail: Option<Url>,
     pub similarity_distance: Decimal,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ApiError {
+    pub error_message: String,
+}
