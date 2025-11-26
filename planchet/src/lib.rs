@@ -10,7 +10,7 @@
 //! #[tokio::main]
 //! async fn main() {
 //!     let client = ClientBuilder::new()
-//!         .api_key("YOUR_API_KEY") // No .to_string() needed!
+//!         .api_key("YOUR_API_KEY")
 //!         .build()
 //!         .unwrap();
 //!
@@ -47,7 +47,7 @@
 //!         Ok(types) => {
 //!             println!("Successfully fetched {} types.", types.len());
 //!         }
-//!         Err(Error::RateLimitExceeded) => {
+//!         Err(Error::RateLimitExceeded { .. }) => {
 //!             eprintln!("Rate limit exceeded. Please try again later.");
 //!         }
 //!         Err(e) => {
@@ -78,16 +78,16 @@ pub enum Error {
     /// The API key was not provided in the `ClientBuilder`.
     ApiKeyMissing,
     /// The provided API key is invalid or has expired (HTTP 401).
-    Unauthorized,
+    Unauthorized { message: String, status: u16 },
     /// The requested resource could not be found (HTTP 404).
-    NotFound,
+    NotFound { message: String, status: u16 },
     /// A parameter in the request was invalid or missing (HTTP 400).
-    InvalidParameter(String),
+    InvalidParameter { message: String, status: u16 },
     /// The API rate limit has been exceeded (HTTP 429).
-    RateLimitExceeded,
+    RateLimitExceeded { message: String, status: u16 },
     /// No user is associated with the provided API key (HTTP 501).
     /// This is specific to the `client_credentials` grant type.
-    NoUserAssociatedWithApiKey,
+    NoUserAssociatedWithApiKey { message: String, status: u16 },
     /// An error returned by the Numista API that does not map to a specific error variant.
     ApiError { message: String, status: u16 },
 }
@@ -97,11 +97,21 @@ impl fmt::Display for Error {
         match self {
             Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
-            Error::Unauthorized => write!(f, "Unauthorized: Invalid or expired API key"),
-            Error::NotFound => write!(f, "NotFound: The requested resource was not found"),
-            Error::InvalidParameter(msg) => write!(f, "InvalidParameter: {}", msg),
-            Error::RateLimitExceeded => write!(f, "RateLimitExceeded: You have exceeded the API rate limit"),
-            Error::NoUserAssociatedWithApiKey => write!(f, "NoUserAssociatedWithApiKey: No user is associated with this API key"),
+            Error::Unauthorized { message, status } => {
+                write!(f, "Unauthorized (status {}): {}", status, message)
+            }
+            Error::NotFound { message, status } => {
+                write!(f, "NotFound (status {}): {}", status, message)
+            }
+            Error::InvalidParameter { message, status } => {
+                write!(f, "InvalidParameter (status {}): {}", status, message)
+            }
+            Error::RateLimitExceeded { message, status } => {
+                write!(f, "RateLimitExceeded (status {}): {}", status, message)
+            }
+            Error::NoUserAssociatedWithApiKey { message, status } => {
+                write!(f, "NoUserAssociatedWithApiKey (status {}): {}", status, message)
+            }
             Error::ApiError { message, status } => {
                 write!(f, "API error (status {}): {}", status, message)
             }
@@ -139,14 +149,30 @@ async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> R
         Err(e) => return Err(e.into()),
     };
 
+    let message = api_error.error_message;
     match status_code {
-        400 => Err(Error::InvalidParameter(api_error.error_message)),
-        401 => Err(Error::Unauthorized),
-        404 => Err(Error::NotFound),
-        429 => Err(Error::RateLimitExceeded),
-        501 => Err(Error::NoUserAssociatedWithApiKey),
+        400 => Err(Error::InvalidParameter {
+            message,
+            status: status_code,
+        }),
+        401 => Err(Error::Unauthorized {
+            message,
+            status: status_code,
+        }),
+        404 => Err(Error::NotFound {
+            message,
+            status: status_code,
+        }),
+        429 => Err(Error::RateLimitExceeded {
+            message,
+            status: status_code,
+        }),
+        501 => Err(Error::NoUserAssociatedWithApiKey {
+            message,
+            status: status_code,
+        }),
         _ => Err(Error::ApiError {
-            message: api_error.error_message,
+            message,
             status: status_code,
         }),
     }
@@ -268,7 +294,8 @@ impl Client {
             params: SearchTypesParams<'a>,
             current_page: i64,
             buffer: std::vec::IntoIter<models::SearchTypeResult>,
-            finished: bool,
+            items_fetched: i64,
+            total_items: Option<i64>,
         }
 
         let initial_state = State {
@@ -276,16 +303,21 @@ impl Client {
             params,
             current_page: 1,
             buffer: Vec::new().into_iter(),
-            finished: false,
+            items_fetched: 0,
+            total_items: None,
         };
 
         stream::unfold(initial_state, |mut state| async move {
-            if state.finished {
-                return None;
+            // Stop if we have fetched all items
+            if let Some(total) = state.total_items {
+                if state.items_fetched >= total {
+                    return None;
+                }
             }
 
             // If we have items in the buffer, return the next one
             if let Some(item) = state.buffer.next() {
+                state.items_fetched += 1;
                 return Some((Ok(item), state));
             }
 
@@ -295,9 +327,12 @@ impl Client {
 
             match state.client.search_types(&params).await {
                 Ok(response) => {
+                    if state.total_items.is_none() {
+                        state.total_items = Some(response.count);
+                    }
+
                     // If the page is empty, we're done
                     if response.types.is_empty() {
-                        state.finished = true;
                         return None;
                     }
 
@@ -307,14 +342,15 @@ impl Client {
 
                     // Return the first item from the new buffer
                     if let Some(item) = state.buffer.next() {
+                        state.items_fetched += 1;
                         Some((Ok(item), state))
                     } else {
-                        None // Should not happen if types is not empty
+                        None
                     }
                 }
                 Err(e) => {
                     // On error, stop streaming and return the error
-                    state.finished = true;
+                    state.total_items = Some(state.items_fetched); // Prevent further calls
                     Some((Err(e), state))
                 }
             }
@@ -527,13 +563,22 @@ impl Client {
             Ok(api_error) => api_error,
             Err(e) => return Err(e.into()),
         };
-
+        let message = api_error.error_message;
         match status_code {
-            401 => Err(Error::Unauthorized),
-            404 => Err(Error::NotFound),
-            429 => Err(Error::RateLimitExceeded),
+            401 => Err(Error::Unauthorized {
+                message,
+                status: status_code,
+            }),
+            404 => Err(Error::NotFound {
+                message,
+                status: status_code,
+            }),
+            429 => Err(Error::RateLimitExceeded {
+                message,
+                status: status_code,
+            }),
             _ => Err(Error::ApiError {
-                message: api_error.error_message,
+                message,
                 status: status_code,
             }),
         }
@@ -994,6 +1039,21 @@ mod tests {
         assert_eq!(response.count, 1);
         assert_eq!(response.types.len(), 1);
         assert_eq!(response.types[0].id, 420);
+    }
+
+    #[test]
+    fn search_types_params_year_date_test() {
+        let params = SearchTypesParams::new().year(2000);
+        assert_eq!(params.year.unwrap(), "2000");
+
+        let params = SearchTypesParams::new().year_range(1990, 2005);
+        assert_eq!(params.year.unwrap(), "1990-2005");
+
+        let params = SearchTypesParams::new().date(1999);
+        assert_eq!(params.date.unwrap(), "1999");
+
+        let params = SearchTypesParams::new().date_range(1980, 1985);
+        assert_eq!(params.date.unwrap(), "1980-1985");
     }
 
     #[tokio::test]
@@ -1548,7 +1608,10 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::Unauthorized => (),
+            Error::Unauthorized { message, status } => {
+                assert_eq!(message, "Invalid API key");
+                assert_eq!(status, 401);
+            }
             _ => panic!("Expected Unauthorized error"),
         }
     }
@@ -1576,7 +1639,10 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::NotFound => (),
+            Error::NotFound { message, status } => {
+                assert_eq!(message, "Not found");
+                assert_eq!(status, 404);
+            }
             _ => panic!("Expected NotFound error"),
         }
     }
@@ -1606,7 +1672,10 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::InvalidParameter(msg) => assert_eq!(msg, "Invalid parameter"),
+            Error::InvalidParameter { message, status } => {
+                assert_eq!(message, "Invalid parameter");
+                assert_eq!(status, 400);
+            }
             _ => panic!("Expected InvalidParameter error"),
         }
     }
@@ -1634,7 +1703,10 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::RateLimitExceeded => (),
+            Error::RateLimitExceeded { message, status } => {
+                assert_eq!(message, "Rate limit exceeded");
+                assert_eq!(status, 429);
+            }
             _ => panic!("Expected RateLimitExceeded error"),
         }
     }
@@ -1674,7 +1746,10 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::NoUserAssociatedWithApiKey => (),
+            Error::NoUserAssociatedWithApiKey { message, status } => {
+                assert_eq!(message, "No user associated");
+                assert_eq!(status, 501);
+            }
             _ => panic!("Expected NoUserAssociatedWithApiKey error"),
         }
     }
