@@ -27,7 +27,7 @@
 //! for a search and how to handle specific API errors.
 //!
 //! ```no_run
-//! use planchet::{ClientBuilder, Error, SearchTypesParams};
+//! use planchet::{ApiError, ClientBuilder, Error, KnownErrorCode, SearchTypesParams};
 //! use futures::stream::TryStreamExt;
 //!
 //! #[tokio::main]
@@ -47,7 +47,7 @@
 //!         Ok(types) => {
 //!             println!("Successfully fetched {} types.", types.len());
 //!         }
-//!         Err(Error::RateLimitExceeded { .. }) => {
+//!         Err(Error::Api(ApiError { code: Some(KnownErrorCode::RateLimitExceeded), .. })) => {
 //!             eprintln!("Rate limit exceeded. Please try again later.");
 //!         }
 //!         Err(e) => {
@@ -61,14 +61,38 @@ pub mod models;
 use futures::stream::{self, Stream};
 use isolang::Language;
 use models::{
-    ApiError, CataloguesResponse, Category, CollectedItem, CollectedItemsResponse,
-    CollectionsResponse, Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken,
-    PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
+    ApiError as ApiErrorResponse, CataloguesResponse, Category, CollectedItem,
+    CollectedItemsResponse, CollectionsResponse, Grade, IssuersResponse, MintDetail, MintsResponse,
+    NumistaType, OAuthToken, PricesResponse, Publication, SearchByImageResponse,
+    SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt;
+
+/// Specific, known error types returned by the Numista API.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum KnownErrorCode {
+    /// The provided API key is invalid or has expired (HTTP 401).
+    Unauthorized,
+    /// The requested resource could not be found (HTTP 404).
+    NotFound,
+    /// A parameter in the request was invalid or missing (HTTP 400).
+    InvalidParameter,
+    /// The API rate limit has been exceeded (HTTP 429).
+    RateLimitExceeded,
+    /// No user is associated with the provided API key (HTTP 501).
+    NoUserAssociatedWithApiKey,
+}
+
+/// An error returned by the Numista API.
+#[derive(Debug)]
+pub struct ApiError {
+    pub status: u16,
+    pub message: String,
+    pub code: Option<KnownErrorCode>,
+}
 
 /// The error type for this crate.
 #[derive(Debug)]
@@ -77,19 +101,8 @@ pub enum Error {
     Http(reqwest::Error),
     /// The API key was not provided in the `ClientBuilder`.
     ApiKeyMissing,
-    /// The provided API key is invalid or has expired (HTTP 401).
-    Unauthorized { message: String, status: u16 },
-    /// The requested resource could not be found (HTTP 404).
-    NotFound { message: String, status: u16 },
-    /// A parameter in the request was invalid or missing (HTTP 400).
-    InvalidParameter { message: String, status: u16 },
-    /// The API rate limit has been exceeded (HTTP 429).
-    RateLimitExceeded { message: String, status: u16 },
-    /// No user is associated with the provided API key (HTTP 501).
-    /// This is specific to the `client_credentials` grant type.
-    NoUserAssociatedWithApiKey { message: String, status: u16 },
-    /// An error returned by the Numista API that does not map to a specific error variant.
-    ApiError { message: String, status: u16 },
+    /// An error returned by the Numista API.
+    Api(ApiError),
 }
 
 impl fmt::Display for Error {
@@ -97,24 +110,7 @@ impl fmt::Display for Error {
         match self {
             Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
-            Error::Unauthorized { message, status } => {
-                write!(f, "Unauthorized (status {}): {}", status, message)
-            }
-            Error::NotFound { message, status } => {
-                write!(f, "NotFound (status {}): {}", status, message)
-            }
-            Error::InvalidParameter { message, status } => {
-                write!(f, "InvalidParameter (status {}): {}", status, message)
-            }
-            Error::RateLimitExceeded { message, status } => {
-                write!(f, "RateLimitExceeded (status {}): {}", status, message)
-            }
-            Error::NoUserAssociatedWithApiKey { message, status } => {
-                write!(f, "NoUserAssociatedWithApiKey (status {}): {}", status, message)
-            }
-            Error::ApiError { message, status } => {
-                write!(f, "API error (status {}): {}", status, message)
-            }
+            Error::Api(e) => write!(f, "API error (status {}): {}", e.status, e.message),
         }
     }
 }
@@ -144,38 +140,25 @@ async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> R
     }
 
     let status_code = status.as_u16();
-    let api_error = match response.json::<ApiError>().await {
+    let api_error_response = match response.json::<ApiErrorResponse>().await {
         Ok(api_error) => api_error,
         Err(e) => return Err(e.into()),
     };
 
-    let message = api_error.error_message;
-    match status_code {
-        400 => Err(Error::InvalidParameter {
-            message,
-            status: status_code,
-        }),
-        401 => Err(Error::Unauthorized {
-            message,
-            status: status_code,
-        }),
-        404 => Err(Error::NotFound {
-            message,
-            status: status_code,
-        }),
-        429 => Err(Error::RateLimitExceeded {
-            message,
-            status: status_code,
-        }),
-        501 => Err(Error::NoUserAssociatedWithApiKey {
-            message,
-            status: status_code,
-        }),
-        _ => Err(Error::ApiError {
-            message,
-            status: status_code,
-        }),
-    }
+    let known_code = match status_code {
+        400 => Some(KnownErrorCode::InvalidParameter),
+        401 => Some(KnownErrorCode::Unauthorized),
+        404 => Some(KnownErrorCode::NotFound),
+        429 => Some(KnownErrorCode::RateLimitExceeded),
+        501 => Some(KnownErrorCode::NoUserAssociatedWithApiKey),
+        _ => None,
+    };
+
+    Err(Error::Api(ApiError {
+        status: status_code,
+        message: api_error_response.error_message,
+        code: known_code,
+    }))
 }
 
 macro_rules! add_lang_param {
@@ -308,7 +291,7 @@ impl Client {
         };
 
         stream::unfold(initial_state, |mut state| async move {
-            // Stop if we have fetched all items
+            // Stop if we have fetched all items OR if the last page was empty.
             if let Some(total) = state.total_items {
                 if state.items_fetched >= total {
                     return None;
@@ -331,8 +314,9 @@ impl Client {
                         state.total_items = Some(response.count);
                     }
 
-                    // If the page is empty, we're done
+                    // If the page is empty, we're done for good.
                     if response.types.is_empty() {
+                        state.total_items = Some(state.items_fetched); // Prevent any further calls
                         return None;
                     }
 
@@ -559,29 +543,23 @@ impl Client {
         }
 
         let status_code = response.status().as_u16();
-        let api_error = match response.json::<ApiError>().await {
+        let api_error_response = match response.json::<ApiErrorResponse>().await {
             Ok(api_error) => api_error,
             Err(e) => return Err(e.into()),
         };
-        let message = api_error.error_message;
-        match status_code {
-            401 => Err(Error::Unauthorized {
-                message,
-                status: status_code,
-            }),
-            404 => Err(Error::NotFound {
-                message,
-                status: status_code,
-            }),
-            429 => Err(Error::RateLimitExceeded {
-                message,
-                status: status_code,
-            }),
-            _ => Err(Error::ApiError {
-                message,
-                status: status_code,
-            }),
-        }
+
+        let known_code = match status_code {
+            401 => Some(KnownErrorCode::Unauthorized),
+            404 => Some(KnownErrorCode::NotFound),
+            429 => Some(KnownErrorCode::RateLimitExceeded),
+            _ => None,
+        };
+
+        Err(Error::Api(ApiError {
+            status: status_code,
+            message: api_error_response.error_message,
+            code: known_code,
+        }))
     }
 
     /// Gets an OAuth token.
@@ -1608,11 +1586,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::Unauthorized { message, status } => {
-                assert_eq!(message, "Invalid API key");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 401);
+                assert_eq!(message, "Invalid API key");
+                assert_eq!(code, Some(KnownErrorCode::Unauthorized));
             }
-            _ => panic!("Expected Unauthorized error"),
+            _ => panic!("Expected an ApiError with KnownErrorCode::Unauthorized"),
         }
     }
 
@@ -1639,11 +1618,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::NotFound { message, status } => {
-                assert_eq!(message, "Not found");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 404);
+                assert_eq!(message, "Not found");
+                assert_eq!(code, Some(KnownErrorCode::NotFound));
             }
-            _ => panic!("Expected NotFound error"),
+            _ => panic!("Expected an ApiError with KnownErrorCode::NotFound"),
         }
     }
 
@@ -1672,11 +1652,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::InvalidParameter { message, status } => {
-                assert_eq!(message, "Invalid parameter");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 400);
+                assert_eq!(message, "Invalid parameter");
+                assert_eq!(code, Some(KnownErrorCode::InvalidParameter));
             }
-            _ => panic!("Expected InvalidParameter error"),
+            _ => panic!("Expected an ApiError with KnownErrorCode::InvalidParameter"),
         }
     }
 
@@ -1703,11 +1684,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::RateLimitExceeded { message, status } => {
-                assert_eq!(message, "Rate limit exceeded");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 429);
+                assert_eq!(message, "Rate limit exceeded");
+                assert_eq!(code, Some(KnownErrorCode::RateLimitExceeded));
             }
-            _ => panic!("Expected RateLimitExceeded error"),
+            _ => panic!("Expected an ApiError with KnownErrorCode::RateLimitExceeded"),
         }
     }
 
@@ -1746,11 +1728,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::NoUserAssociatedWithApiKey { message, status } => {
-                assert_eq!(message, "No user associated");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 501);
+                assert_eq!(message, "No user associated");
+                assert_eq!(code, Some(KnownErrorCode::NoUserAssociatedWithApiKey));
             }
-            _ => panic!("Expected NoUserAssociatedWithApiKey error"),
+            _ => panic!("Expected an ApiError with KnownErrorCode::NoUserAssociatedWithApiKey"),
         }
     }
 
@@ -1767,7 +1750,7 @@ mod tests {
             .create();
 
         let client = ClientBuilder::new()
-            .api_key("test_key".to_string())
+            .api_key("test_key")
             .base_url(url)
             .build()
             .unwrap();
@@ -1777,11 +1760,12 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
-            Error::ApiError { message, status } => {
-                assert_eq!(message, "Internal Server Error");
+            Error::Api(ApiError { status, message, code }) => {
                 assert_eq!(status, 500);
+                assert_eq!(message, "Internal Server Error");
+                assert_eq!(code, None);
             }
-            _ => panic!("Expected a generic ApiError"),
+            _ => panic!("Expected a generic ApiError with no known error code"),
         }
     }
 }
