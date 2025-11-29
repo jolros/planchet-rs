@@ -20,10 +20,10 @@ fn print_coin_side(label: &str, side: Option<&CoinSide>, indent: usize) {
         print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
         if !s.engravers.is_empty() {
-            print_indented(&format!("engravers: {}", s.engravers.join(", ")), next_indent);
+            print_key_value("engravers", Some(s.engravers.join(", ")), next_indent);
         }
         if !s.designers.is_empty() {
-            print_indented(&format!("designers: {}", s.designers.join(", ")), next_indent);
+            print_key_value("designers", Some(s.designers.join(", ")), next_indent);
         }
         print_key_value("description", s.description.as_ref(), next_indent);
         print_key_value("lettering", s.lettering.as_ref(), next_indent);
@@ -37,12 +37,9 @@ fn print_demonetization(label: &str, demonetization: Option<&Demonetization>, in
     if let Some(d) = demonetization {
         print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
-        print_indented(&format!("is demonetized: {}", d.is_demonetized), next_indent);
+        print_key_value("is_demonetized", Some(d.is_demonetized), next_indent);
         if let Some(date) = d.demonetization_date {
-            print_indented(
-                &format!("demonetization date: {}", date.format("%Y-%m-%d")),
-                next_indent,
-            );
+            print_key_value("demonetization_date", Some(date.format("%Y-%m-%d").to_string()), next_indent);
         }
     }
 }
@@ -51,8 +48,8 @@ fn print_issuer(label: &str, issuer: Option<&Issuer>, indent: usize) {
     if let Some(i) = issuer {
         print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
-        print_indented(&format!("code: {}", i.code), next_indent);
-        print_indented(&format!("name: {}", i.name), next_indent);
+        print_key_value("code", Some(i.code.clone()), next_indent);
+        print_key_value("name", Some(i.name.clone()), next_indent);
     }
 }
 
@@ -60,7 +57,7 @@ fn print_issuing_entity(label: &str, entity: Option<&IssuingEntity>, indent: usi
     if let Some(e) = entity {
         print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
-        print_indented(&format!("name: {}", e.name), next_indent);
+        print_key_value("name", Some(e.name.clone()), next_indent);
     }
 }
 
@@ -118,12 +115,10 @@ fn print_printers(label: &str, printers: Option<&Vec<Printer>>, indent: usize) {
 pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
     if let Some(t) = type_ {
         // Print the required fields first
-        print_indented(&format!("id: {}", t.id), indent);
-        if let Some(url) = &t.url {
-            print_indented(&format!("url: {}", url), indent);
-        }
-        print_indented(&format!("title: {}", t.title), indent);
-        print_indented(&format!("category: {}", t.category), indent);
+        print_key_value("id", Some(t.id), indent);
+        print_key_value("url", t.url.as_ref().map(|u| u.to_string()), indent);
+        print_key_value("title", Some(t.title.clone()), indent);
+        print_key_value("category", Some(t.category.to_string()), indent);
 
         print_issuer("issuer", t.issuer.as_ref(), indent);
         print_issuing_entity("issuing_entity", t.issuing_entity.as_ref(), indent);
@@ -137,24 +132,18 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
         print_key_value("type_name", t.type_name.as_ref(), indent);
 
         if let Some(v) = &t.value {
-            if let Some(text) = &v.text {
-                print_indented(&format!("value: {}", text), indent);
-            }
+            print_key_value("value", v.text.as_ref(), indent);
         }
 
         print_ruling_authorities("ruling_authorities", t.ruler.as_ref(), indent);
         print_key_value("shape", t.shape.as_ref(), indent);
 
         if let Some(c) = &t.composition {
-            if let Some(text) = &c.text {
-                print_indented(&format!("composition: {}", text), indent);
-            }
+            print_key_value("composition", c.text.as_ref(), indent);
         }
 
         if let Some(tech) = &t.technique {
-            if let Some(text) = &tech.text {
-                print_indented(&format!("technique: {}", text), indent);
-            }
+            print_key_value("technique", tech.text.as_ref(), indent);
         }
 
         print_demonetization("demonetization", t.demonetization.as_ref(), indent);
@@ -171,7 +160,7 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
         if let Some(mints) = &t.mints {
             if !mints.is_empty() {
                 let mint_names: Vec<String> = mints.iter().map(|m| m.name.clone()).collect();
-                print_indented(&format!("mints: {}", mint_names.join(", ")), indent);
+                print_key_value("mints", Some(mint_names.join(", ")), indent);
             }
         }
 
@@ -182,7 +171,7 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
 
         if let Some(tags) = &t.tags {
             if !tags.is_empty() {
-                print_indented(&format!("tags: {}", tags.join(", ")), indent);
+                print_key_value("tags", Some(tags.join(", ")), indent);
             }
         }
 
