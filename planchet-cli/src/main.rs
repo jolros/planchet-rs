@@ -173,15 +173,18 @@ impl From<SearchTypeResult> for TypeResult {
             id: t.id,
             title: t.title,
             category: t.category.to_string(),
-            issuer: t.issuer.name,
+            issuer: t
+                .issuer
+                .map(|i| i.name)
+                .unwrap_or_else(|| "<Unknown>".to_string()),
             min_year: t
                 .min_year
                 .map(|y| y.to_string())
-                .unwrap_or_else(|| "<unknown>".to_string()),
+                .unwrap_or_else(|| "<Unknown>".to_string()),
             max_year: t
                 .max_year
                 .map(|y| y.to_string())
-                .unwrap_or_else(|| "<unknown>".to_string()),
+                .unwrap_or_else(|| "<Unknown>".to_string()),
         }
     }
 }

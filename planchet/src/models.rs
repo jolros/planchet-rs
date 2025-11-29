@@ -321,7 +321,7 @@ pub struct SearchTypeResult {
     pub id: i64,
     pub title: String,
     pub category: Category,
-    pub issuer: Issuer,
+    pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
     pub obverse_thumbnail: Option<Url>,
