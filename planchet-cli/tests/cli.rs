@@ -525,6 +525,11 @@ async fn type_command_test() {
             "code": "yugoslavia",
             "name": "Yugoslavia"
         },
+        "issuing_entity": {
+            "id": 123,
+            "name": "Yugoslav Mint"
+        },
+        "secondary_issuing_entity": null,
         "min_year": 1988,
         "max_year": null,
         "type": "Billiard token",
@@ -553,7 +558,10 @@ async fn type_command_test() {
             "engravers": ["John Doe"],
             "designers": [],
             "description": "A nice description"
-        }
+        },
+        "size2": 1.23,
+        "printers": [],
+        "watermark": null
     });
 
     server
@@ -579,13 +587,16 @@ category: Exonumia
 issuer:
   code: yugoslavia
   name: Yugoslavia
+issuing entity:
+  name: Yugoslav Mint
 min year: 1988
 type name: Billiard token
-authorities:
+ruling authorities:
   - Socialist Federal Republic
 demonetization:
   is demonetized: false
   demonetization date: 2024-01-01
+size2: 1.23
 obverse:
   engravers: John Doe
   description: A nice description
