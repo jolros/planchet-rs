@@ -323,18 +323,18 @@
 <a href=#323 id=323 data-nosnippet>323</a>                <span class="kw">break</span>;
 <a href=#324 id=324 data-nosnippet>324</a>            }
 <a href=#325 id=325 data-nosnippet>325</a>
-<a href=#326 id=326 data-nosnippet>326</a>            <span class="macro">print!</span>(<span class="string">"Press 'n' or space for the next page, 'q' to quit: "</span>);
+<a href=#326 id=326 data-nosnippet>326</a>            <span class="macro">print!</span>(<span class="string">"Press &lt;Enter&gt; for the next page, or 'q' to quit: "</span>);
 <a href=#327 id=327 data-nosnippet>327</a>            io::stdout().flush()<span class="question-mark">?</span>;
 <a href=#328 id=328 data-nosnippet>328</a>
 <a href=#329 id=329 data-nosnippet>329</a>            <span class="kw">let </span><span class="kw-2">mut </span>input = String::new();
 <a href=#330 id=330 data-nosnippet>330</a>            io::stdin().read_line(<span class="kw-2">&amp;mut </span>input)<span class="question-mark">?</span>;
 <a href=#331 id=331 data-nosnippet>331</a>
 <a href=#332 id=332 data-nosnippet>332</a>            <span class="kw">match </span>input.trim() {
-<a href=#333 id=333 data-nosnippet>333</a>                <span class="string">"n" </span>| <span class="string">"" </span>=&gt; page += <span class="number">1</span>,
+<a href=#333 id=333 data-nosnippet>333</a>                <span class="string">"" </span>=&gt; page += <span class="number">1</span>,
 <a href=#334 id=334 data-nosnippet>334</a>                <span class="string">"q" </span>=&gt; <span class="kw">break</span>,
 <a href=#335 id=335 data-nosnippet>335</a>                <span class="kw">_ </span>=&gt; {
-<a href=#336 id=336 data-nosnippet>336</a>                    <span class="macro">println!</span>(<span class="string">"Invalid input. Quitting."</span>);
-<a href=#337 id=337 data-nosnippet>337</a>                    <span class="kw">break</span>;
+<a href=#336 id=336 data-nosnippet>336</a>                    <span class="macro">println!</span>(<span class="string">"Invalid input. Please try again."</span>);
+<a href=#337 id=337 data-nosnippet>337</a>                    <span class="kw">continue</span>;
 <a href=#338 id=338 data-nosnippet>338</a>                }
 <a href=#339 id=339 data-nosnippet>339</a>            }
 <a href=#340 id=340 data-nosnippet>340</a>        }
