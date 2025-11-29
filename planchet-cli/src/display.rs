@@ -17,7 +17,7 @@ fn print_key_value<T: std::fmt::Display>(key: &str, value: Option<T>, indent: us
 
 fn print_coin_side(label: &str, side: Option<&CoinSide>, indent: usize) {
     if let Some(s) = side {
-        print_indented(&format!("{}:", label), indent);
+        print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
         if !s.engravers.is_empty() {
             print_indented(&format!("engravers: {}", s.engravers.join(", ")), next_indent);
@@ -35,7 +35,7 @@ fn print_coin_side(label: &str, side: Option<&CoinSide>, indent: usize) {
 
 fn print_demonetization(label: &str, demonetization: Option<&Demonetization>, indent: usize) {
     if let Some(d) = demonetization {
-        print_indented(&format!("{}:", label), indent);
+        print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
         print_indented(&format!("is demonetized: {}", d.is_demonetized), next_indent);
         if let Some(date) = d.demonetization_date {
@@ -49,7 +49,7 @@ fn print_demonetization(label: &str, demonetization: Option<&Demonetization>, in
 
 fn print_issuer(label: &str, issuer: Option<&Issuer>, indent: usize) {
     if let Some(i) = issuer {
-        print_indented(&format!("{}:", label), indent);
+        print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
         print_indented(&format!("code: {}", i.code), next_indent);
         print_indented(&format!("name: {}", i.name), next_indent);
@@ -58,7 +58,7 @@ fn print_issuer(label: &str, issuer: Option<&Issuer>, indent: usize) {
 
 fn print_issuing_entity(label: &str, entity: Option<&IssuingEntity>, indent: usize) {
     if let Some(e) = entity {
-        print_indented(&format!("{}:", label), indent);
+        print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
         print_indented(&format!("name: {}", e.name), next_indent);
     }
@@ -67,7 +67,7 @@ fn print_issuing_entity(label: &str, entity: Option<&IssuingEntity>, indent: usi
 fn print_ruling_authorities(label: &str, authorities: Option<&Vec<RulingAuthority>>, indent: usize) {
     if let Some(a) = authorities {
         if !a.is_empty() {
-            print_indented(&format!("{}:", label), indent);
+            print_indented(&format!("{}:", label.replace('_', " ")), indent);
             let next_indent = indent + 2;
             for authority in a {
                 print_indented(&format!("- {}", authority.name), next_indent);
@@ -79,7 +79,7 @@ fn print_ruling_authorities(label: &str, authorities: Option<&Vec<RulingAuthorit
 fn print_references(label: &str, references: Option<&Vec<Reference>>, indent: usize) {
     if let Some(r) = references {
         if !r.is_empty() {
-            print_indented(&format!("{}:", label), indent);
+            print_indented(&format!("{}:", label.replace('_', " ")), indent);
             let next_indent = indent + 2;
             for reference in r {
                 print_indented(
@@ -94,7 +94,7 @@ fn print_references(label: &str, references: Option<&Vec<Reference>>, indent: us
 fn print_related_types(label: &str, related_types: Option<&Vec<RelatedType>>, indent: usize) {
     if let Some(r) = related_types {
         if !r.is_empty() {
-            print_indented(&format!("{}:", label), indent);
+            print_indented(&format!("{}:", label.replace('_', " ")), indent);
             let next_indent = indent + 2;
             for type_ in r {
                 print_indented(&format!("- [{}] {}", type_.id, type_.title), next_indent);
@@ -106,7 +106,7 @@ fn print_related_types(label: &str, related_types: Option<&Vec<RelatedType>>, in
 fn print_printers(label: &str, printers: Option<&Vec<Printer>>, indent: usize) {
     if let Some(p) = printers {
         if !p.is_empty() {
-            print_indented(&format!("{}:", label), indent);
+            print_indented(&format!("{}:", label.replace('_', " ")), indent);
             let next_indent = indent + 2;
             for printer in p {
                 print_indented(&format!("- {}", printer.name), next_indent);
@@ -126,9 +126,9 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
         print_indented(&format!("category: {}", t.category), indent);
 
         print_issuer("issuer", t.issuer.as_ref(), indent);
-        print_issuing_entity("issuing entity", t.issuing_entity.as_ref(), indent);
+        print_issuing_entity("issuing_entity", t.issuing_entity.as_ref(), indent);
         print_issuing_entity(
-            "secondary issuing entity",
+            "secondary_issuing_entity",
             t.secondary_issuing_entity.as_ref(),
             indent,
         );
@@ -142,7 +142,7 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
             }
         }
 
-        print_ruling_authorities("ruling authorities", t.ruler.as_ref(), indent);
+        print_ruling_authorities("ruling_authorities", t.ruler.as_ref(), indent);
         print_key_value("shape", t.shape.as_ref(), indent);
 
         if let Some(c) = &t.composition {
@@ -186,7 +186,7 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
             }
         }
 
-        print_related_types("related types", t.related_types.as_ref(), indent);
+        print_related_types("related_types", t.related_types.as_ref(), indent);
         print_references("references", t.references.as_ref(), indent);
     }
 }
