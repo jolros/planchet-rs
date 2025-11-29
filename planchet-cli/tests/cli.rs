@@ -591,6 +591,105 @@ async fn test_api_key_from_env() {
 }
 
 #[tokio::test]
+async fn type_command_test() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let type_response = json!({
+        "id": 354845,
+        "url": "https://en.numista.com/catalogue/exonumia354845.html",
+        "title": "10 Vinarjev (Franjo Žagar)",
+        "category": "exonumia",
+        "issuer": {
+            "code": "yugoslavia",
+            "name": "Yugoslavia"
+        },
+        "issuing_entity": {
+            "id": 123,
+            "name": "Yugoslav Mint"
+        },
+        "secondary_issuing_entity": null,
+        "min_year": 1988,
+        "max_year": null,
+        "type": "Billiard token",
+        "demonetization": {
+            "is_demonetized": false,
+            "demonetization_date": "2024-01-01"
+        },
+        "tags": ["billiard", "token"],
+        "references": [
+            {
+                "catalogue": {
+                    "id": 123,
+                    "code": "TC"
+                },
+                "number": "456"
+            }
+        ],
+        "related_types": [],
+        "ruler": [
+            {
+                "id": 789,
+                "name": "Socialist Federal Republic"
+            }
+        ],
+        "obverse": {
+            "engravers": ["John Doe"],
+            "designers": [],
+            "description": "A nice description"
+        },
+        "size2": 1.23,
+        "printers": [],
+        "watermark": null
+    });
+
+    server
+        .mock("GET", "/types/354845")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(type_response.to_string())
+        .create_async()
+        .await;
+
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.arg("--api-key")
+        .arg("test_key")
+        .arg("type")
+        .arg("--id")
+        .arg("354845")
+        .env("NUMISTA_API_URL", url);
+
+    let expected_output = "id: 354845
+url: https://en.numista.com/catalogue/exonumia354845.html
+title: 10 Vinarjev (Franjo Žagar)
+category: Exonumia
+issuer:
+  code: yugoslavia
+  name: Yugoslavia
+issuing entity:
+  name: Yugoslav Mint
+min year: 1988
+type name: Billiard token
+ruling authorities:
+  - Socialist Federal Republic
+demonetization:
+  is demonetized: false
+  demonetization date: 2024-01-01
+size2: 1.23
+obverse:
+  engravers: John Doe
+  description: A nice description
+tags: billiard, token
+references:
+  - TC: 456
+";
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::eq(expected_output));
+}
+
+#[tokio::test]
 async fn test_api_key_precedence() {
     let mut server = Server::new_async().await;
     let url = server.url();

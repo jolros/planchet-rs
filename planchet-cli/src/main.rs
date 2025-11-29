@@ -62,6 +62,8 @@ use std::env;
 use std::io::{self, Write};
 use tabled::{Table, Tabled};
 
+mod display;
+
 // Client creation helper
 fn build_client(api_key: String, bearer_token: Option<String>) -> Result<Client> {
     let mut client_builder = ClientBuilder::new().api_key(api_key);
@@ -135,6 +137,12 @@ enum Commands {
         /// Retrieve all items at once.
         #[arg(long)]
         all: bool,
+    },
+    /// Get a single type by ID.
+    Type {
+        /// The ID of the type to get.
+        #[arg(long)]
+        id: i64,
     },
 }
 
@@ -353,6 +361,13 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
     Ok(())
 }
 
+async fn get_type(api_key: String, id: i64) -> Result<()> {
+    let client = build_client(api_key, None)?;
+    let type_ = client.get_type(id, None).await?;
+    display::print_numista_type(Some(&type_), 0);
+    Ok(())
+}
+
 // Main entrypoint
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -376,7 +391,10 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::Dump { user_id } => dump_collection(cli.api_key, user_id).await?,
         Commands::Summarize { user_id } => summarize_collection(cli.api_key, user_id).await?,
-        Commands::Types { query, year, all } => search_types(cli.api_key, query, year, all).await?,
+        Commands::Types { query, year, all } => {
+            search_types(cli.api_key, query, year, all).await?
+        }
+        Commands::Type { id } => get_type(cli.api_key, id).await?,
     }
 
     Ok(())

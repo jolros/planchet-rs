@@ -15,6 +15,7 @@ tabled = "0.20.0"
 futures = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = { version = "2.5.7", features = ["serde"] }
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
