@@ -2,42 +2,93 @@
 //!
 //! # Examples
 //!
+//! ## Basic Search
+//!
 //! ```no_run
 //! use planchet::{ClientBuilder, SearchTypesParams};
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     let client = ClientBuilder::new()
-//!         .api_key("YOUR_API_KEY".to_string())
+//!         .api_key("YOUR_API_KEY")
 //!         .build()
 //!         .unwrap();
 //!
-//!     let params = SearchTypesParams::new().q("victoria");
+//!     let params = SearchTypesParams::new().q("victoria").year_range(1850, 1900);
 //!     let response = client.search_types(&params).await.unwrap();
 //!
 //!     println!("Found {} types", response.count);
 //! }
 //! ```
+//!
+//! ## Streaming and Error Handling
+//!
+//! This example demonstrates how to use the streaming API to fetch all results
+//! for a search and how to handle specific API errors.
+//!
+//! ```no_run
+//! use planchet::{ClientBuilder, Error, SearchTypesParams};
+//! use futures::stream::TryStreamExt;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let client = ClientBuilder::new()
+//!         .api_key("YOUR_API_KEY")
+//!         .build()
+//!         .unwrap();
+//!
+//!     let params = SearchTypesParams::new().q("galleon");
+//!
+//!     let results = client.stream_all_types(params)
+//!         .try_collect::<Vec<_>>()
+//!         .await;
+//!
+//!     match results {
+//!         Ok(types) => {
+//!             println!("Successfully fetched {} types.", types.len());
+//!         }
+//!         Err(Error::RateLimitExceeded) => {
+//!             eprintln!("Rate limit exceeded. Please try again later.");
+//!         }
+//!         Err(e) => {
+//!             eprintln!("An unexpected error occurred: {}", e);
+//!         }
+//!     }
+//! }
+//! ```
 pub mod models;
 
+use futures::stream::{self, Stream};
 use isolang::Language;
 use models::{
-    ApiError, CataloguesResponse, Category, CollectedItem, CollectedItemsResponse,
-    CollectionsResponse, Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken,
-    PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
+    CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
+    Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken, PricesResponse,
+    Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Serialize, Serializer};
+use std::borrow::Cow;
 use std::fmt;
 
 /// The error type for this crate.
 #[derive(Debug)]
 pub enum Error {
-    /// An error from the underlying HTTP client.
+    /// An error from the underlying HTTP client (`reqwest`).
     Http(reqwest::Error),
-    /// The API key was not provided.
+    /// The API key was not provided in the `ClientBuilder`.
     ApiKeyMissing,
-    /// An error from the Numista API.
+    /// The provided API key is invalid or has expired (HTTP 401).
+    Unauthorized,
+    /// The requested resource could not be found (HTTP 404).
+    NotFound,
+    /// A parameter in the request was invalid or missing (HTTP 400).
+    InvalidParameter(String),
+    /// The API rate limit has been exceeded (HTTP 429).
+    RateLimitExceeded,
+    /// No user is associated with the provided API key (HTTP 501).
+    /// This is specific to the `client_credentials` grant type.
+    NoUserAssociatedWithApiKey,
+    /// An error returned by the Numista API that does not map to a specific error variant.
     ApiError { message: String, status: u16 },
 }
 
@@ -46,6 +97,11 @@ impl fmt::Display for Error {
         match self {
             Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
+            Error::Unauthorized => write!(f, "Unauthorized: Invalid or expired API key"),
+            Error::NotFound => write!(f, "NotFound: The requested resource was not found"),
+            Error::InvalidParameter(msg) => write!(f, "InvalidParameter: {}", msg),
+            Error::RateLimitExceeded => write!(f, "RateLimitExceeded: You have exceeded the API rate limit"),
+            Error::NoUserAssociatedWithApiKey => write!(f, "NoUserAssociatedWithApiKey: No user is associated with this API key"),
             Error::ApiError { message, status } => {
                 write!(f, "API error (status {}): {}", status, message)
             }
@@ -78,33 +134,22 @@ async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> R
     }
 
     let status_code = status.as_u16();
-    let api_error = match response.json::<ApiError>().await {
+    let api_error = match response.json::<models::ApiError>().await {
         Ok(api_error) => api_error,
         Err(e) => return Err(e.into()),
     };
 
-    Err(Error::ApiError {
-        message: api_error.error_message,
-        status: status_code,
-    })
-}
-
-async fn process_empty_response(response: reqwest::Response) -> Result<()> {
-    let status = response.status();
-    if status.is_success() {
-        return Ok(());
+    match status_code {
+        400 => Err(Error::InvalidParameter(api_error.error_message)),
+        401 => Err(Error::Unauthorized),
+        404 => Err(Error::NotFound),
+        429 => Err(Error::RateLimitExceeded),
+        501 => Err(Error::NoUserAssociatedWithApiKey),
+        _ => Err(Error::ApiError {
+            message: api_error.error_message,
+            status: status_code,
+        }),
     }
-
-    let status_code = status.as_u16();
-    let api_error = match response.json::<ApiError>().await {
-        Ok(api_error) => api_error,
-        Err(e) => return Err(e.into()),
-    };
-
-    Err(Error::ApiError {
-        message: api_error.error_message,
-        status: status_code,
-    })
 }
 
 macro_rules! add_lang_param {
@@ -196,7 +241,7 @@ impl Client {
     /// * `params` - The search parameters.
     pub async fn search_types(
         &self,
-        params: &SearchTypesParams,
+        params: &SearchTypesParams<'_>,
     ) -> Result<SearchTypesResponse> {
         let response = self
             .client
@@ -205,6 +250,86 @@ impl Client {
             .send()
             .await?;
         process_response(response).await
+    }
+
+    /// Returns a stream of all types matching the search parameters.
+    ///
+    /// This method will make multiple API calls as needed to fetch all pages.
+    ///
+    /// # Arguments
+    ///
+    /// * `params` - The search parameters.
+    pub fn stream_all_types<'a>(
+        &self,
+        params: SearchTypesParams<'a>,
+    ) -> impl Stream<Item = Result<models::SearchTypeResult>> + 'a {
+        struct State<'a> {
+            client: Client,
+            params: SearchTypesParams<'a>,
+            current_page: i64,
+            buffer: std::vec::IntoIter<models::SearchTypeResult>,
+            items_fetched: i64,
+            total_items: Option<i64>,
+        }
+
+        let initial_state = State {
+            client: self.clone(),
+            params,
+            current_page: 1,
+            buffer: Vec::new().into_iter(),
+            items_fetched: 0,
+            total_items: None,
+        };
+
+        stream::unfold(initial_state, |mut state| async move {
+            // Stop if we have fetched all items OR if the last page was empty.
+            if let Some(total) = state.total_items {
+                if state.items_fetched >= total {
+                    return None;
+                }
+            }
+
+            // If we have items in the buffer, return the next one
+            if let Some(item) = state.buffer.next() {
+                state.items_fetched += 1;
+                return Some((Ok(item), state));
+            }
+
+            // Buffer is empty, fetch the next page
+            let mut params = state.params.clone();
+            params.page = Some(state.current_page);
+
+            match state.client.search_types(&params).await {
+                Ok(response) => {
+                    if state.total_items.is_none() {
+                        state.total_items = Some(response.count);
+                    }
+
+                    // If the page is empty, we're done for good.
+                    if response.types.is_empty() {
+                        state.total_items = Some(state.items_fetched); // Prevent any further calls
+                        return None;
+                    }
+
+                    // Increment page number and refill buffer
+                    state.current_page += 1;
+                    state.buffer = response.types.into_iter();
+
+                    // Return the first item from the new buffer
+                    if let Some(item) = state.buffer.next() {
+                        state.items_fetched += 1;
+                        Some((Ok(item), state))
+                    } else {
+                        None
+                    }
+                }
+                Err(e) => {
+                    // On error, stop streaming and return the error
+                    state.total_items = Some(state.items_fetched); // Prevent further calls
+                    Some((Err(e), state))
+                }
+            }
+        })
     }
 
     /// Gets the list of issuers.
@@ -404,7 +529,25 @@ impl Client {
             .send()
             .await?;
 
-        process_empty_response(response).await
+        if response.status().is_success() {
+            return Ok(());
+        }
+
+        let status_code = response.status().as_u16();
+        let api_error = match response.json::<models::ApiError>().await {
+            Ok(api_error) => api_error,
+            Err(e) => return Err(e.into()),
+        };
+
+        match status_code {
+            401 => Err(Error::Unauthorized),
+            404 => Err(Error::NotFound),
+            429 => Err(Error::RateLimitExceeded),
+            _ => Err(Error::ApiError {
+                message: api_error.error_message,
+                status: status_code,
+            }),
+        }
     }
 
     /// Gets an OAuth token.
@@ -548,35 +691,35 @@ pub struct GradingDetails {
 
 /// A builder for creating a `Client`.
 #[derive(Debug, Default)]
-pub struct ClientBuilder {
-    api_key: Option<String>,
-    base_url: Option<String>,
-    bearer_token: Option<String>,
+pub struct ClientBuilder<'a> {
+    api_key: Option<Cow<'a, str>>,
+    base_url: Option<Cow<'a, str>>,
+    bearer_token: Option<Cow<'a, str>>,
 }
 
-impl ClientBuilder {
+impl<'a> ClientBuilder<'a> {
     /// Creates a new `ClientBuilder`.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Sets the API key to use for requests.
-    pub fn api_key(mut self, api_key: String) -> Self {
-        self.api_key = Some(api_key);
+    pub fn api_key<S: Into<Cow<'a, str>>>(mut self, api_key: S) -> Self {
+        self.api_key = Some(api_key.into());
         self
     }
 
     /// Sets the base URL to use for requests.
     ///
     /// This is useful for testing.
-    pub fn base_url(mut self, base_url: String) -> Self {
-        self.base_url = Some(base_url);
+    pub fn base_url<S: Into<Cow<'a, str>>>(mut self, base_url: S) -> Self {
+        self.base_url = Some(base_url.into());
         self
     }
 
     /// Sets the bearer token to use for requests.
-    pub fn bearer_token(mut self, bearer_token: String) -> Self {
-        self.bearer_token = Some(bearer_token);
+    pub fn bearer_token<S: Into<Cow<'a, str>>>(mut self, bearer_token: S) -> Self {
+        self.bearer_token = Some(bearer_token.into());
         self
     }
 
@@ -601,7 +744,10 @@ impl ClientBuilder {
             .default_headers(headers)
             .build()?;
 
-        let base_url = self.base_url.unwrap_or_else(|| "https://api.numista.com/v3".to_string());
+        let base_url = self
+            .base_url
+            .map(|s| s.into_owned())
+            .unwrap_or_else(|| "https://api.numista.com/v3".to_string());
 
         Ok(Client { client, base_url })
     }
@@ -619,26 +765,26 @@ where
 }
 
 /// Parameters for searching for types.
-#[derive(Debug, Default, Serialize)]
-pub struct SearchTypesParams {
+#[derive(Debug, Default, Serialize, Clone)]
+pub struct SearchTypesParams<'a> {
     #[serde(serialize_with = "serialize_lang")]
     lang: Option<Language>,
     category: Option<Category>,
-    q: Option<String>,
-    issuer: Option<String>,
+    q: Option<Cow<'a, str>>,
+    issuer: Option<Cow<'a, str>>,
     catalogue: Option<i64>,
-    number: Option<String>,
+    number: Option<Cow<'a, str>>,
     ruler: Option<i64>,
     material: Option<i64>,
-    year: Option<String>,
-    date: Option<String>,
-    size: Option<String>,
-    weight: Option<String>,
+    year: Option<Cow<'a, str>>,
+    date: Option<Cow<'a, str>>,
+    size: Option<Cow<'a, str>>,
+    weight: Option<Cow<'a, str>>,
     page: Option<i64>,
     count: Option<i64>,
 }
 
-impl SearchTypesParams {
+impl<'a> SearchTypesParams<'a> {
     /// Creates a new `SearchTypesParams`.
     pub fn new() -> Self {
         Self::default()
@@ -657,14 +803,14 @@ impl SearchTypesParams {
     }
 
     /// Sets the search query.
-    pub fn q(mut self, q: &str) -> Self {
-        self.q = Some(q.to_string());
+    pub fn q<S: Into<Cow<'a, str>>>(mut self, q: S) -> Self {
+        self.q = Some(q.into());
         self
     }
 
     /// Sets the issuer to search for.
-    pub fn issuer(mut self, issuer: &str) -> Self {
-        self.issuer = Some(issuer.to_string());
+    pub fn issuer<S: Into<Cow<'a, str>>>(mut self, issuer: S) -> Self {
+        self.issuer = Some(issuer.into());
         self
     }
 
@@ -675,8 +821,8 @@ impl SearchTypesParams {
     }
 
     /// Sets the number to search for in a catalogue.
-    pub fn number(mut self, number: &str) -> Self {
-        self.number = Some(number.to_string());
+    pub fn number<S: Into<Cow<'a, str>>>(mut self, number: S) -> Self {
+        self.number = Some(number.into());
         self
     }
 
@@ -692,27 +838,39 @@ impl SearchTypesParams {
         self
     }
 
-    /// Sets the year to search for.
-    pub fn year(mut self, year: &str) -> Self {
-        self.year = Some(year.to_string());
+    /// Sets the year to a single year.
+    pub fn year(mut self, year: i32) -> Self {
+        self.year = Some(year.to_string().into());
         self
     }
 
-    /// Sets the date to search for.
-    pub fn date(mut self, date: &str) -> Self {
-        self.date = Some(date.to_string());
+    /// Sets the year to a range of years.
+    pub fn year_range(mut self, min: i32, max: i32) -> Self {
+        self.year = Some(format!("{}-{}", min, max).into());
+        self
+    }
+
+    /// Sets the date to a single year.
+    pub fn date(mut self, year: i32) -> Self {
+        self.date = Some(year.to_string().into());
+        self
+    }
+
+    /// Sets the date to a range of years.
+    pub fn date_range(mut self, min: i32, max: i32) -> Self {
+        self.date = Some(format!("{}-{}", min, max).into());
         self
     }
 
     /// Sets the size to search for.
-    pub fn size(mut self, size: &str) -> Self {
-        self.size = Some(size.to_string());
+    pub fn size<S: Into<Cow<'a, str>>>(mut self, size: S) -> Self {
+        self.size = Some(size.into());
         self
     }
 
     /// Sets the weight to search for.
-    pub fn weight(mut self, weight: &str) -> Self {
-        self.weight = Some(weight.to_string());
+    pub fn weight<S: Into<Cow<'a, str>>>(mut self, weight: S) -> Self {
+        self.weight = Some(weight.into());
         self
     }
 
@@ -733,6 +891,7 @@ impl SearchTypesParams {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures::StreamExt;
     use serde_json;
 
     #[test]
@@ -843,6 +1002,96 @@ mod tests {
         assert_eq!(response.types[0].id, 420);
     }
 
+    #[test]
+    fn search_types_params_year_date_test() {
+        let params = SearchTypesParams::new().year(2000);
+        assert_eq!(params.year.unwrap(), "2000");
+
+        let params = SearchTypesParams::new().year_range(1990, 2005);
+        assert_eq!(params.year.unwrap(), "1990-2005");
+
+        let params = SearchTypesParams::new().date(1999);
+        assert_eq!(params.date.unwrap(), "1999");
+
+        let params = SearchTypesParams::new().date_range(1980, 1985);
+        assert_eq!(params.date.unwrap(), "1980-1985");
+    }
+
+    #[tokio::test]
+    async fn stream_all_types_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        server
+            .mock("GET", "/types")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
+                mockito::Matcher::UrlEncoded("page".into(), "1".into()),
+            ]))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "count": 2,
+                "types": [
+                    { "id": 1, "title": "Type 1", "category": "coin", "issuer": {"code": "a", "name": "A"}, "min_year": 1, "max_year": 2 }
+                ]
+            }"#,
+            )
+            .create();
+
+        server
+            .mock("GET", "/types")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
+                mockito::Matcher::UrlEncoded("page".into(), "2".into()),
+            ]))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "count": 2,
+                "types": [
+                    { "id": 2, "title": "Type 2", "category": "coin", "issuer": {"code": "b", "name": "B"}, "min_year": 3, "max_year": 4 }
+                ]
+            }"#,
+            )
+            .create();
+
+        server
+            .mock("GET", "/types")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
+                mockito::Matcher::UrlEncoded("page".into(), "3".into()),
+            ]))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                "count": 2,
+                "types": []
+            }"#,
+            )
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key")
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let params = SearchTypesParams::new().q("victoria");
+        let stream = client.stream_all_types(params);
+
+        let results: Vec<Result<models::SearchTypeResult>> = stream.collect().await;
+        let results: Result<Vec<models::SearchTypeResult>> = results.into_iter().collect();
+        let results = results.unwrap();
+
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].id, 1);
+        assert_eq!(results[1].id, 2);
+    }
+
     #[tokio::test]
     async fn get_issues_test() {
         let mut server = mockito::Server::new_async().await;
@@ -855,7 +1104,7 @@ mod tests {
             .create();
 
         let client = ClientBuilder::new()
-            .api_key("test_key".to_string())
+            .api_key("test_key")
             .base_url(url)
             .build()
             .unwrap();
@@ -1298,7 +1547,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn api_error_test() {
+    async fn unauthorized_error_test() {
         let mut server = mockito::Server::new_async().await;
         let url = server.url();
 
@@ -1320,11 +1569,165 @@ mod tests {
         mock.assert();
         assert!(response.is_err());
         match response.err().unwrap() {
+            Error::Unauthorized => (),
+            _ => panic!("Expected Unauthorized error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn not_found_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/types/999999")
+            .with_status(404)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "Not found"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key")
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_type(999999, None).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
+            Error::NotFound => (),
+            _ => panic!("Expected NotFound error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn invalid_parameter_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/types")
+            .match_query(mockito::Matcher::UrlEncoded("q".into(), "a".repeat(101)))
+            .with_status(400)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "Invalid parameter"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key")
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let params = SearchTypesParams::new().q("a".repeat(101));
+        let response = client.search_types(&params).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
+            Error::InvalidParameter(msg) => assert_eq!(msg, "Invalid parameter"),
+            _ => panic!("Expected InvalidParameter error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn rate_limit_exceeded_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/types/123")
+            .with_status(429)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "Rate limit exceeded"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key")
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_type(123, None).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
+            Error::RateLimitExceeded => (),
+            _ => panic!("Expected RateLimitExceeded error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn no_user_associated_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/oauth_token")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "grant_type".into(),
+                "client_credentials".into(),
+            ))
+            .with_status(501)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "No user associated"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key")
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let params = OAuthTokenParams {
+            grant_type: models::GrantType::ClientCredentials,
+            code: None,
+            client_id: None,
+            client_secret: None,
+            redirect_uri: None,
+            scope: None,
+        };
+        let response = client.get_oauth_token(&params).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
+            Error::NoUserAssociatedWithApiKey => (),
+            _ => panic!("Expected NoUserAssociatedWithApiKey error"),
+        }
+    }
+
+    #[tokio::test]
+    async fn generic_api_error_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server
+            .mock("GET", "/types/420")
+            .with_status(500)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"error_message": "Internal Server Error"}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key".to_string())
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_type(420, None).await;
+
+        mock.assert();
+        assert!(response.is_err());
+        match response.err().unwrap() {
             Error::ApiError { message, status } => {
-                assert_eq!(message, "Invalid API key");
-                assert_eq!(status, 401);
+                assert_eq!(message, "Internal Server Error");
+                assert_eq!(status, 500);
             }
-            _ => panic!("Expected ApiError"),
+            _ => panic!("Expected a generic ApiError"),
         }
     }
 }
