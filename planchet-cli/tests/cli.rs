@@ -397,8 +397,8 @@ async fn types_command_pagination_test() {
     let mut child = cmd.spawn().unwrap();
     let mut stdin = child.stdin.take().unwrap();
 
-    // First page, then "n" for next page
-    stdin.write_all(b"n\n").unwrap();
+    // First page, then newline for next page
+    stdin.write_all(b"\n").unwrap();
     // Second page, then "q" to quit
     stdin.write_all(b"q\n").unwrap();
 
