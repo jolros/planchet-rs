@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["print_coin_side","print_demonetization","print_indented","print_issuer","print_issuing_entity","print_key_value","print_numista_type","print_printers","print_references","print_related_types","print_ruling_authorities"]};
