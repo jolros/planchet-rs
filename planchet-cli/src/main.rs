@@ -139,6 +139,12 @@ enum Commands {
         all: bool,
     },
     /// Get a single type by ID.
+    ///
+    /// # Example
+    ///
+    /// ```bash
+    /// $ planchet-cli --api-key my-secret-key type --id 42
+    /// ```
     Type {
         /// The ID of the type to get.
         #[arg(long)]
