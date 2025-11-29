@@ -467,7 +467,7 @@ async fn api_error_test() {
         .env("NUMISTA_API_URL", url);
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("HTTP error"));
+        .stderr(predicate::str::contains("Request error"));
 }
 
 #[tokio::test]
@@ -509,6 +509,57 @@ async fn test_api_key_from_arg() {
         .failure();
 
     mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn debug_flag_test() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let token_response = json!({
+        "access_token": "test_token",
+        "token_type": "bearer",
+        "expires_in": 3600,
+        "user_id": 1
+    });
+
+    let collection_response = json!({
+        "item_count": 0,
+        "item_for_swap_count": 0,
+        "item_type_count": 0,
+        "item_type_for_swap_count": 0,
+        "items": []
+    });
+
+    server
+        .mock(
+            "GET",
+            "/oauth_token?grant_type=client_credentials&scope=view_collection",
+        )
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(token_response.to_string())
+        .create_async()
+        .await;
+    server
+        .mock("GET", "/users/1/collected_items")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(collection_response.to_string())
+        .create_async()
+        .await;
+
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.arg("--api-key")
+        .arg("test_key")
+        .arg("--debug")
+        .arg("dump")
+        .arg("--user-id")
+        .arg("1")
+        .env("NUMISTA_API_URL", url);
+    cmd.assert()
+        .success()
+        .stderr(predicate::str::contains("Request headers"));
 }
 
 #[tokio::test]

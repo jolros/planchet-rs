@@ -13,6 +13,8 @@ anyhow = "1.0.100"
 planchet = { path = "../planchet" }
 tabled = "0.20.0"
 futures = "0.3"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
