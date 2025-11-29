@@ -323,18 +323,18 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
                 break;
             }
 
-            print!("Press 'n' or space for the next page, 'q' to quit: ");
+            print!("Press <Enter> for the next page, or 'q' to quit: ");
             io::stdout().flush()?;
 
             let mut input = String::new();
             io::stdin().read_line(&mut input)?;
 
             match input.trim() {
-                "n" | "" => page += 1,
+                "" => page += 1,
                 "q" => break,
                 _ => {
-                    println!("Invalid input. Quitting.");
-                    break;
+                    println!("Invalid input. Please try again.");
+                    continue;
                 }
             }
         }
