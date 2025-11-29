@@ -579,13 +579,13 @@ category: Exonumia
 issuer:
   code: yugoslavia
   name: Yugoslavia
-min_year: 1988
-type_name: Billiard token
-ruler:
+min year: 1988
+type name: Billiard token
+authorities:
   - Socialist Federal Republic
 demonetization:
-  is_demonetized: false
-  demonetization_date: 2024-01-01
+  is demonetized: false
+  demonetization date: 2024-01-01
 obverse:
   engravers: John Doe
   description: A nice description
