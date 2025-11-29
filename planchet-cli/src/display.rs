@@ -19,11 +19,15 @@ fn print_coin_side(label: &str, side: Option<&CoinSide>, indent: usize) {
     if let Some(s) = side {
         print_indented(&format!("{}:", label.replace('_', " ")), indent);
         let next_indent = indent + 2;
-        if !s.engravers.is_empty() {
-            print_key_value("engravers", Some(s.engravers.join(", ")), next_indent);
+        if let Some(engravers) = &s.engravers {
+            if !engravers.is_empty() {
+                print_key_value("engravers", Some(engravers.join(", ")), next_indent);
+            }
         }
-        if !s.designers.is_empty() {
-            print_key_value("designers", Some(s.designers.join(", ")), next_indent);
+        if let Some(designers) = &s.designers {
+            if !designers.is_empty() {
+                print_key_value("designers", Some(designers.join(", ")), next_indent);
+            }
         }
         print_key_value("description", s.description.as_ref(), next_indent);
         print_key_value("lettering", s.lettering.as_ref(), next_indent);
