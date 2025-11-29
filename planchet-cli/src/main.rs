@@ -172,7 +172,10 @@ impl From<SearchTypeResult> for TypeResult {
         Self {
             id: t.id,
             title: t.title,
-            category: t.category.to_string(),
+            category: t
+                .category
+                .map(|c| c.to_string())
+                .unwrap_or_else(|| "<Unknown>".to_string()),
             issuer: t
                 .issuer
                 .map(|i| i.name)
