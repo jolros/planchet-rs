@@ -364,7 +364,7 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
 async fn get_type(api_key: String, id: i64) -> Result<()> {
     let client = build_client(api_key, None)?;
     let type_ = client.get_type(id, None).await?;
-    display::show_type(&type_);
+    display::print_numista_type(Some(&type_), 0);
     Ok(())
 }
 
