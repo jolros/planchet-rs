@@ -222,12 +222,24 @@ pub struct Catalogue {
     pub code: String,
 }
 
+use std::fmt;
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Category {
     Coin,
     Banknote,
     Exonumia,
+}
+
+impl fmt::Display for Category {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Category::Coin => write!(f, "Coin"),
+            Category::Banknote => write!(f, "Banknote"),
+            Category::Exonumia => write!(f, "Exonumia"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]

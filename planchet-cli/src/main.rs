@@ -8,7 +8,7 @@
 //! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
 //!
 //! ```bash
-//! planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
+//! planchet-cli --api-key <YOUR_API_KEY> <COMMAND>
 //! ```
 //!
 //! # Commands
@@ -18,7 +18,7 @@
 //! Dumps the user's collection to the console, sorted by issuer name, year, and title.
 //!
 //! ```bash
-//! $ planchet-cli --api-key my-secret-key --user-id 123 dump
+//! $ planchet-cli --api-key my-secret-key dump --user-id 123
 //! Canada - 5 Cents - Victoria (1858)
 //! Canada - 1 Cent - George V (1920)
 //! ```
@@ -29,7 +29,7 @@
 //! the oldest item, and the newest item.
 //!
 //! ```bash
-//! $ planchet-cli --api-key my-secret-key --user-id 123 summarize
+//! $ planchet-cli --api-key my-secret-key summarize --user-id 123
 //! +--------+-------------+-------------+-------------+
 //! | Issuer | Total Items | Oldest Item | Newest Item |
 //! +--------+-------------+-------------+-------------+
@@ -38,12 +38,14 @@
 //! ```
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use futures::stream::TryStreamExt;
 use planchet::{
-    models::{CollectedItem, GrantType},
-    Client, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams,
+    models::{CollectedItem, GrantType, SearchTypeResult},
+    Client, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams, SearchTypesParams,
 };
 use std::collections::HashMap;
 use std::env;
+use std::io::{self, Write};
 use tabled::{Table, Tabled};
 
 // Client creation helper
@@ -84,10 +86,6 @@ struct Cli {
     #[arg(short, long, env = "NUMISTA_API_KEY")]
     api_key: String,
 
-    /// The ID of the user to fetch the collection for.
-    #[arg(long)]
-    user_id: i64,
-
     #[command(subcommand)]
     command: Commands,
 }
@@ -95,9 +93,31 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Dump the user's collection to the console.
-    Dump,
+    Dump {
+        /// The ID of the user to fetch the collection for.
+        #[arg(long)]
+        user_id: i64,
+    },
     /// Summarize the user's collection by issuer.
-    Summarize,
+    Summarize {
+        /// The ID of the user to fetch the collection for.
+        #[arg(long)]
+        user_id: i64,
+    },
+    /// Search the catalogue by types.
+    Types {
+        /// The search query.
+        #[arg(long)]
+        query: String,
+
+        /// The year to search for.
+        #[arg(long)]
+        year: Option<i32>,
+
+        /// Retrieve all items at once.
+        #[arg(long)]
+        all: bool,
+    },
 }
 
 // Data structures and helpers for formatting
@@ -111,6 +131,41 @@ struct IssuerSummary {
     oldest_item: String,
     #[tabled(rename = "Newest Item")]
     newest_item: String,
+}
+
+#[derive(Tabled)]
+struct TypeResult {
+    #[tabled(rename = "ID")]
+    id: i64,
+    #[tabled(rename = "Title")]
+    title: String,
+    #[tabled(rename = "Category")]
+    category: String,
+    #[tabled(rename = "Issuer")]
+    issuer: String,
+    #[tabled(rename = "Min Year")]
+    min_year: String,
+    #[tabled(rename = "Max Year")]
+    max_year: String,
+}
+
+impl From<SearchTypeResult> for TypeResult {
+    fn from(t: SearchTypeResult) -> Self {
+        Self {
+            id: t.id,
+            title: t.title,
+            category: t.category.to_string(),
+            issuer: t.issuer.name,
+            min_year: t
+                .min_year
+                .map(|y| y.to_string())
+                .unwrap_or_else(|| "<unknown>".to_string()),
+            max_year: t
+                .max_year
+                .map(|y| y.to_string())
+                .unwrap_or_else(|| "<unknown>".to_string()),
+        }
+    }
 }
 
 fn get_issuer_name(item: &CollectedItem) -> String {
@@ -203,14 +258,83 @@ async fn summarize_collection(api_key: String, user_id: i64) -> Result<()> {
     Ok(())
 }
 
+async fn search_types(api_key: String, query: String, year: Option<i32>, all: bool) -> Result<()> {
+    let client = build_client(api_key, None)?;
+    let mut params = SearchTypesParams::new().q(&query);
+    if let Some(y) = year {
+        params = params.date(y);
+    }
+
+    let search_details = format!(
+        "query: '{}'{}",
+        query,
+        year.map(|y| format!(", year: {}", y))
+            .unwrap_or_else(|| "".to_string())
+    );
+
+    if all {
+        let types = client
+            .stream_all_types(params)
+            .try_collect::<Vec<_>>()
+            .await?;
+        println!("Found {} results for {}.", types.len(), search_details);
+        let results: Vec<TypeResult> = types.into_iter().map(TypeResult::from).collect();
+        let table = Table::new(results).to_string();
+        println!("{}", table);
+    } else {
+        let mut page = 1;
+        let count = 25;
+        loop {
+            let response = client
+                .search_types(&params.clone().page(page).count(count))
+                .await?;
+
+            if page == 1 {
+                println!("Found {} results for {}.", response.count, search_details);
+            }
+
+            if response.types.is_empty() {
+                break;
+            }
+
+            let results: Vec<TypeResult> =
+                response.types.into_iter().map(TypeResult::from).collect();
+            let table = Table::new(results).to_string();
+            println!("{}", table);
+
+            if page * count >= response.count {
+                break;
+            }
+
+            print!("Press 'n' or space for the next page, 'q' to quit: ");
+            io::stdout().flush()?;
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
+
+            match input.trim() {
+                "n" | "" => page += 1,
+                "q" => break,
+                _ => {
+                    println!("Invalid input. Quitting.");
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 // Main entrypoint
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Dump => dump_collection(cli.api_key, cli.user_id).await?,
-        Commands::Summarize => summarize_collection(cli.api_key, cli.user_id).await?,
+        Commands::Dump { user_id } => dump_collection(cli.api_key, user_id).await?,
+        Commands::Summarize { user_id } => summarize_collection(cli.api_key, user_id).await?,
+        Commands::Types { query, year, all } => search_types(cli.api_key, query, year, all).await?,
     }
 
     Ok(())

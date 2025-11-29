@@ -3,7 +3,8 @@ use mockito::Server;
 use predicates::prelude::*;
 use serde_json::json;
 use std::env;
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 #[tokio::test]
 async fn dump_command_test() {
@@ -130,9 +131,9 @@ async fn dump_command_test() {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
+        .arg("dump")
         .arg("--user-id")
         .arg("1")
-        .arg("dump")
         .env("NUMISTA_API_URL", url);
     cmd.assert()
         .success()
@@ -272,9 +273,9 @@ async fn summarize_command_test() {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
+        .arg("summarize")
         .arg("--user-id")
         .arg("1")
-        .arg("summarize")
         .env("NUMISTA_API_URL", url);
     cmd.assert()
         .success()
@@ -284,6 +285,160 @@ async fn summarize_command_test() {
         .stdout(predicate::str::contains("1920"))
         .stdout(predicate::str::contains("<Unknown>"))
         .stdout(predicate::str::contains("1"));
+}
+
+#[tokio::test]
+async fn types_command_all_test() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let search_response_p1 = json!({
+        "count": 2,
+        "types": [
+            { "id": 1, "title": "Type 1", "category": "coin", "issuer": {"code": "a", "name": "A"}, "min_year": 1, "max_year": 2 }
+        ]
+    });
+    let search_response_p2 = json!({
+        "count": 2,
+        "types": [
+            { "id": 2, "title": "Type 2", "category": "coin", "issuer": {"code": "b", "name": "B"}, "min_year": 3, "max_year": 4 }
+        ]
+    });
+    let search_response_p3 = json!({ "count": 2, "types": [] });
+
+    server
+        .mock("GET", "/types?q=test&page=1")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response_p1.to_string())
+        .create_async()
+        .await;
+    server
+        .mock("GET", "/types?q=test&page=2")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response_p2.to_string())
+        .create_async()
+        .await;
+    server
+        .mock("GET", "/types?q=test&page=3")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response_p3.to_string())
+        .create_async()
+        .await;
+
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.arg("--api-key")
+        .arg("test_key")
+        .arg("types")
+        .arg("--query")
+        .arg("test")
+        .arg("--all")
+        .env("NUMISTA_API_URL", url);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Found 2 results for query: 'test'"))
+        .stdout(predicate::str::contains("Type 1"))
+        .stdout(predicate::str::contains("Type 2"));
+}
+
+#[tokio::test]
+async fn types_command_pagination_test() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let search_response_p1 = json!({
+        "count": 26,
+        "types": (1..=25).map(|i| json!({
+            "id": i,
+            "title": format!("Type {}", i),
+            "category": "coin",
+            "issuer": {"code": "a", "name": "A"},
+            "min_year": 1,
+            "max_year": 2
+        })).collect::<Vec<_>>()
+    });
+    let search_response_p2 = json!({
+        "count": 26,
+        "types": [
+            { "id": 26, "title": "Type 26", "category": "coin", "issuer": {"code": "b", "name": "B"}, "min_year": 3, "max_year": 4 }
+        ]
+    });
+
+    server
+        .mock("GET", "/types?q=test&page=1&count=25")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response_p1.to_string())
+        .create_async()
+        .await;
+    server
+        .mock("GET", "/types?q=test&page=2&count=25")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response_p2.to_string())
+        .create_async()
+        .await;
+
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.arg("--api-key")
+        .arg("test_key")
+        .arg("types")
+        .arg("--query")
+        .arg("test")
+        .env("NUMISTA_API_URL", url)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped());
+
+    let mut child = cmd.spawn().unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+
+    // First page, then "n" for next page
+    stdin.write_all(b"n\n").unwrap();
+    // Second page, then "q" to quit
+    stdin.write_all(b"q\n").unwrap();
+
+    let output = child.wait_with_output().unwrap();
+    let output_str = String::from_utf8(output.stdout).unwrap();
+
+    assert!(output.status.success());
+    assert!(output_str.contains("Found 26 results for query: 'test'"));
+    assert!(output_str.contains("Type 1"));
+    assert!(output_str.contains("Type 25"));
+    assert!(output_str.contains("Type 26"));
+}
+
+#[tokio::test]
+async fn types_command_year_test() {
+    let mut server = Server::new_async().await;
+    let url = server.url();
+
+    let search_response = json!({ "count": 0, "types": [] });
+
+    server
+        .mock("GET", "/types?q=test&date=2024&page=1")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(search_response.to_string())
+        .create_async()
+        .await;
+
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.arg("--api-key")
+        .arg("test_key")
+        .arg("types")
+        .arg("--query")
+        .arg("test")
+        .arg("--year")
+        .arg("2024")
+        .arg("--all")
+        .env("NUMISTA_API_URL", url);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Found 0 results for query: 'test', year: 2024"));
 }
 
 #[tokio::test]
@@ -304,9 +459,9 @@ async fn api_error_test() {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("test_key")
+        .arg("dump")
         .arg("--user-id")
         .arg("1")
-        .arg("dump")
         .env("NUMISTA_API_URL", url);
     cmd.assert()
         .failure()
@@ -317,9 +472,9 @@ async fn api_error_test() {
 async fn test_no_api_key() {
     env::remove_var("NUMISTA_API_KEY");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
-    cmd.arg("--user-id")
+    cmd.arg("dump")
+        .arg("--user-id")
         .arg("123")
-        .arg("dump")
         .assert()
         .failure()
         .stderr(predicates::str::contains("the following required arguments were not provided"));
@@ -344,9 +499,9 @@ async fn test_api_key_from_arg() {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("arg_key")
+        .arg("dump")
         .arg("--user-id")
         .arg("123")
-        .arg("dump")
         .env("NUMISTA_API_URL", url)
         .assert()
         .failure();
@@ -371,9 +526,9 @@ async fn test_api_key_from_env() {
 
     env::set_var("NUMISTA_API_KEY", "env_key");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
-    cmd.arg("--user-id")
+    cmd.arg("dump")
+        .arg("--user-id")
         .arg("123")
-        .arg("dump")
         .env("NUMISTA_API_URL", url)
         .assert()
         .failure();
@@ -401,9 +556,9 @@ async fn test_api_key_precedence() {
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
     cmd.arg("--api-key")
         .arg("arg_key")
+        .arg("dump")
         .arg("--user-id")
         .arg("123")
-        .arg("dump")
         .env("NUMISTA_API_URL", url)
         .assert()
         .failure();
