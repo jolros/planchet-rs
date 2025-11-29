@@ -293,18 +293,19 @@ async fn types_command_all_test() {
     let url = server.url();
 
     let search_response_p1 = json!({
-        "count": 2,
+        "count": 3,
         "types": [
-            { "id": 1, "title": "Type 1", "category": "coin", "issuer": {"code": "a", "name": "A"}, "min_year": 1, "max_year": 2 }
-        ]
-    });
-    let search_response_p2 = json!({
-        "count": 2,
-        "types": [
+            { "id": 1, "title": "Type 1", "category": "coin", "issuer": {"code": "a", "name": "A"}, "min_year": 1, "max_year": 2 },
             { "id": 2, "title": "Type 2", "category": "coin", "issuer": {"code": "b", "name": "B"}, "min_year": 3, "max_year": 4 }
         ]
     });
-    let search_response_p3 = json!({ "count": 2, "types": [] });
+    let search_response_p2 = json!({
+        "count": 3,
+        "types": [
+            { "id": 3, "title": "Type 3", "category": "coin", "issuer": {"code": "c", "name": "C"}, "min_year": 5, "max_year": 6 }
+        ]
+    });
+    let search_response_p3 = json!({ "count": 3, "types": [] });
 
     server
         .mock("GET", "/types?q=test&page=1")
@@ -339,9 +340,10 @@ async fn types_command_all_test() {
 
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("Found 2 results for query: 'test'"))
+        .stdout(predicate::str::contains("Found 3 results for query: 'test'"))
         .stdout(predicate::str::contains("Type 1"))
-        .stdout(predicate::str::contains("Type 2"));
+        .stdout(predicate::str::contains("Type 2"))
+        .stdout(predicate::str::contains("Type 3"));
 }
 
 #[tokio::test]

@@ -36,6 +36,20 @@
 //! | Canada | 2           | 1858        | 1920        |
 //! +--------+-------------+-------------+-------------+
 //! ```
+//!
+//! ## `types`
+//!
+//! Searches the catalogue by types using a keyword and an optional year.
+//!
+//! ```bash
+//! $ planchet-cli --api-key my-secret-key types --query "Victoria" --year 1858
+//! Found 1 results for query: 'Victoria', year: 1858.
+//! +----+--------------------+----------+--------+----------+----------+
+//! | ID | Title              | Category | Issuer | Min Year | Max Year |
+//! +----+--------------------+----------+--------+----------+----------+
+//! | 42 | 5 Cents - Victoria | coin     | Canada | 1858     | 1901     |
+//! +----+--------------------+----------+--------+----------+----------+
+//! ```
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use futures::stream::TryStreamExt;
@@ -258,6 +272,16 @@ async fn summarize_collection(api_key: String, user_id: i64) -> Result<()> {
     Ok(())
 }
 
+fn print_search_header(count: i64, query: &str, year: Option<i32>) {
+    let search_details = format!(
+        "query: '{}'{}",
+        query,
+        year.map(|y| format!(", year: {}", y))
+            .unwrap_or_else(|| "".to_string())
+    );
+    println!("Found {} results for {}.", count, search_details);
+}
+
 async fn search_types(api_key: String, query: String, year: Option<i32>, all: bool) -> Result<()> {
     let client = build_client(api_key, None)?;
     let mut params = SearchTypesParams::new().q(&query);
@@ -265,19 +289,12 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
         params = params.date(y);
     }
 
-    let search_details = format!(
-        "query: '{}'{}",
-        query,
-        year.map(|y| format!(", year: {}", y))
-            .unwrap_or_else(|| "".to_string())
-    );
-
     if all {
         let types = client
             .stream_all_types(params)
             .try_collect::<Vec<_>>()
             .await?;
-        println!("Found {} results for {}.", types.len(), search_details);
+        print_search_header(types.len() as i64, &query, year);
         let results: Vec<TypeResult> = types.into_iter().map(TypeResult::from).collect();
         let table = Table::new(results).to_string();
         println!("{}", table);
@@ -290,7 +307,7 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
                 .await?;
 
             if page == 1 {
-                println!("Found {} results for {}.", response.count, search_details);
+                print_search_header(response.count, &query, year);
             }
 
             if response.types.is_empty() {
