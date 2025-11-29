@@ -66,10 +66,12 @@ use models::{
     Publication, SearchByImageResponse, SearchTypesResponse, User,
 };
 use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest_middleware::{ClientBuilder as MiddlewareClientBuilder, ClientWithMiddleware, Middleware, Next};
+use http::Extensions;
 use serde::{de::DeserializeOwned, Serialize, Serializer};
 use std::borrow::Cow;
 use std::fmt;
-
+use tracing::{info_span, trace, Instrument};
 /// A specific kind of API error.
 #[derive(Debug, PartialEq)]
 pub enum KnownApiError {
@@ -99,8 +101,10 @@ pub struct ApiError {
 pub enum Error {
     /// The API key was not provided in the `ClientBuilder`.
     ApiKeyMissing,
-    /// An error from the underlying HTTP client (`reqwest`).
-    Http(reqwest::Error),
+    /// An error related to the underlying HTTP client or middleware stack.
+    Request(Box<dyn std::error::Error + Send + Sync>),
+    /// An error from `serde_json`.
+    Json(serde_json::Error),
     /// An error returned by the Numista API.
     ApiError(ApiError),
 }
@@ -109,7 +113,8 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
-            Error::Http(e) => write!(f, "HTTP error: {}", e),
+            Error::Request(e) => write!(f, "Request error: {}", e),
+            Error::Json(e) => write!(f, "JSON error: {}", e),
             Error::ApiError(e) => write!(f, "API error (status {}): {}", e.status, e.message),
         }
     }
@@ -119,7 +124,19 @@ impl std::error::Error for Error {}
 
 impl From<reqwest::Error> for Error {
     fn from(err: reqwest::Error) -> Self {
-        Error::Http(err)
+        Error::Request(Box::new(err))
+    }
+}
+
+impl From<reqwest_middleware::Error> for Error {
+    fn from(err: reqwest_middleware::Error) -> Self {
+        Error::Request(Box::new(err))
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(err: serde_json::Error) -> Self {
+        Error::Json(err)
     }
 }
 
@@ -129,7 +146,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The main client for interacting with the Numista API.
 #[derive(Debug, Clone)]
 pub struct Client {
-    client: reqwest::Client,
+    client: ClientWithMiddleware,
     base_url: String,
 }
 
@@ -156,12 +173,81 @@ async fn parse_api_error(response: reqwest::Response) -> Error {
     })
 }
 
-async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> Result<T> {
+async fn process_response<T: DeserializeOwned>(
+    response: reqwest::Response,
+) -> Result<T> {
     if response.status().is_success() {
         return Ok(response.json::<T>().await?);
     }
 
     Err(parse_api_error(response).await)
+}
+
+#[derive(Default)]
+struct LoggingMiddleware;
+
+#[async_trait::async_trait]
+impl Middleware for LoggingMiddleware {
+    async fn handle(
+        &self,
+        req: reqwest::Request,
+        extensions: &mut Extensions,
+        next: Next<'_>,
+    ) -> reqwest_middleware::Result<reqwest::Response> {
+        let span = info_span!(
+            "Request",
+            method = %req.method(),
+            url = %req.url(),
+        );
+
+        async move {
+            trace!("Request headers: {:?}", req.headers());
+            if let Some(body) = req.body() {
+                if let Some(bytes) = body.as_bytes() {
+                    if let Ok(str_body) = std::str::from_utf8(bytes) {
+                        trace!("Request body: {}", str_body);
+                    }
+                }
+            }
+
+            let res = next.run(req, extensions).await;
+
+            match res {
+                Ok(response) => {
+                    let status = response.status();
+                    let headers = response.headers().clone();
+                    let body_bytes = match response.bytes().await {
+                        Ok(bytes) => bytes,
+                        Err(e) => {
+                            return Err(reqwest_middleware::Error::Reqwest(e));
+                        }
+                    };
+
+                    trace!("Response status: {}", status);
+                    trace!("Response headers: {:?}", headers);
+                    if let Ok(str_body) = std::str::from_utf8(&body_bytes) {
+                        if !str_body.is_empty() {
+                            trace!("Response body: {}", str_body);
+                        }
+                    }
+
+                    let new_body = reqwest::Body::from(body_bytes);
+                    let mut new_response_builder = http::Response::builder()
+                        .status(status);
+                    *new_response_builder.headers_mut().unwrap() = headers;
+                    let new_response = new_response_builder.body(new_body).unwrap();
+
+                    Ok(reqwest::Response::from(new_response))
+                }
+                Err(e) => {
+                    trace!("Request failed: {:?}", e);
+                    Err(e)
+                }
+            }
+        }
+        .instrument(span)
+        .await
+    }
 }
 
 macro_rules! add_lang_param {
@@ -476,7 +562,8 @@ impl Client {
                 "{}/users/{}/collected_items",
                 self.base_url, user_id
             ))
-            .json(item)
+            .header("Content-Type", "application/json")
+            .body(serde_json::to_string(item)?)
             .send()
             .await?;
         process_response(response).await
@@ -519,7 +606,8 @@ impl Client {
                 "{}/users/{}/collected_items/{}",
                 self.base_url, user_id, item_id
             ))
-            .json(item)
+            .header("Content-Type", "application/json")
+            .body(serde_json::to_string(item)?)
             .send()
             .await?;
         process_response(response).await
@@ -575,7 +663,8 @@ impl Client {
         let response = self
             .client
             .post(&format!("{}/search_by_image", self.base_url))
-            .json(request)
+            .header("Content-Type", "application/json")
+            .body(serde_json::to_string(request)?)
             .send()
             .await?;
         process_response(response).await
@@ -733,14 +822,19 @@ impl<'a> ClientBuilder<'a> {
         }
 
         if let Some(bearer_token) = self.bearer_token {
-            let mut auth_value = HeaderValue::from_str(&format!("Bearer {}", bearer_token)).unwrap();
+            let mut auth_value =
+                HeaderValue::from_str(&format!("Bearer {}", bearer_token)).unwrap();
             auth_value.set_sensitive(true);
             headers.insert("Authorization", auth_value);
         }
 
-        let client = reqwest::Client::builder()
+        let reqwest_client = reqwest::Client::builder()
             .default_headers(headers)
             .build()?;
+
+        let client = MiddlewareClientBuilder::new(reqwest_client)
+            .with(LoggingMiddleware)
+            .build();
 
         let base_url = self
             .base_url

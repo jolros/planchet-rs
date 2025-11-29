@@ -100,6 +100,10 @@ struct Cli {
     #[arg(short, long, env = "NUMISTA_API_KEY")]
     api_key: String,
 
+    /// Enable debug logging.
+    #[arg(long, global = true)]
+    debug: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -347,6 +351,21 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    let log_level = if cli.debug { "trace" } else { "info" };
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            tracing_subscriber::EnvFilter::new(format!(
+                "planchet={},planchet_cli={},reqwest={}",
+                log_level, log_level, log_level
+            ))
+        });
+
+    tracing_subscriber::fmt()
+        .with_env_filter(env_filter)
+        .with_writer(std::io::stderr)
+        .with_ansi(false)
+        .init();
 
     match cli.command {
         Commands::Dump { user_id } => dump_collection(cli.api_key, user_id).await?,

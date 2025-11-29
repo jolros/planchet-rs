@@ -6,6 +6,10 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 reqwest = { version = "0.12.24", features = ["json"] }
+reqwest-middleware = "0.4.2"
+tracing = "0.1"
+async-trait = "0.1"
+http = "1.0"
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.48.0", features = ["full"] }
 rust_decimal = { version = "1.39.0", features = ["serde"] }
