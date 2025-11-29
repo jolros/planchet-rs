@@ -189,8 +189,8 @@ pub struct LetteringScript {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CoinSide {
-    pub engravers: Vec<String>,
-    pub designers: Vec<String>,
+    pub engravers: Option<Vec<String>>,
+    pub designers: Option<Vec<String>>,
     pub description: Option<String>,
     pub lettering: Option<String>,
     pub lettering_scripts: Option<Vec<LetteringScript>>,
