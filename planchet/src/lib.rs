@@ -47,7 +47,7 @@
 //!         Ok(types) => {
 //!             println!("Successfully fetched {} types.", types.len());
 //!         }
-//!         Err(Error::ApiError(e)) if e.kind == Some(planchet::ApiErrorKind::RateLimitExceeded) => {
+//!         Err(Error::ApiError(e)) if e.kind == Some(planchet::KnownApiError::RateLimitExceeded) => {
 //!             eprintln!("Rate limit exceeded. Please try again later.");
 //!         }
 //!         Err(e) => {
@@ -72,7 +72,7 @@ use std::fmt;
 
 /// A specific kind of API error.
 #[derive(Debug, PartialEq)]
-pub enum ApiErrorKind {
+pub enum KnownApiError {
     /// The provided API key is invalid or has expired (HTTP 401).
     Unauthorized,
     /// The requested resource could not be found (HTTP 404).
@@ -91,16 +91,16 @@ pub enum ApiErrorKind {
 pub struct ApiError {
     pub message: String,
     pub status: u16,
-    pub kind: Option<ApiErrorKind>,
+    pub kind: Option<KnownApiError>,
 }
 
 /// The error type for this crate.
 #[derive(Debug)]
 pub enum Error {
-    /// An error from the underlying HTTP client (`reqwest`).
-    Http(reqwest::Error),
     /// The API key was not provided in the `ClientBuilder`.
     ApiKeyMissing,
+    /// An error from the underlying HTTP client (`reqwest`).
+    Http(reqwest::Error),
     /// An error returned by the Numista API.
     ApiError(ApiError),
 }
@@ -108,8 +108,8 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiKeyMissing => write!(f, "Numista API key is required"),
+            Error::Http(e) => write!(f, "HTTP error: {}", e),
             Error::ApiError(e) => write!(f, "API error (status {}): {}", e.status, e.message),
         }
     }
@@ -141,11 +141,11 @@ async fn parse_api_error(response: reqwest::Response) -> Error {
     };
 
     let kind = match status_code {
-        400 => Some(ApiErrorKind::InvalidParameter),
-        401 => Some(ApiErrorKind::Unauthorized),
-        404 => Some(ApiErrorKind::NotFound),
-        429 => Some(ApiErrorKind::RateLimitExceeded),
-        501 => Some(ApiErrorKind::NoUserAssociatedWithApiKey),
+        400 => Some(KnownApiError::InvalidParameter),
+        401 => Some(KnownApiError::Unauthorized),
+        404 => Some(KnownApiError::NotFound),
+        429 => Some(KnownApiError::RateLimitExceeded),
+        501 => Some(KnownApiError::NoUserAssociatedWithApiKey),
         _ => None,
     };
 
@@ -1569,7 +1569,7 @@ mod tests {
         match response.err().unwrap() {
             Error::ApiError(e) => {
                 assert_eq!(e.status, 401);
-                assert_eq!(e.kind, Some(ApiErrorKind::Unauthorized));
+                assert_eq!(e.kind, Some(KnownApiError::Unauthorized));
             }
             _ => panic!("Expected ApiError"),
         }
@@ -1600,7 +1600,7 @@ mod tests {
         match response.err().unwrap() {
             Error::ApiError(e) => {
                 assert_eq!(e.status, 404);
-                assert_eq!(e.kind, Some(ApiErrorKind::NotFound));
+                assert_eq!(e.kind, Some(KnownApiError::NotFound));
             }
             _ => panic!("Expected ApiError"),
         }
@@ -1634,7 +1634,7 @@ mod tests {
             Error::ApiError(e) => {
                 assert_eq!(e.status, 400);
                 assert_eq!(e.message, "Invalid parameter");
-                assert_eq!(e.kind, Some(ApiErrorKind::InvalidParameter));
+                assert_eq!(e.kind, Some(KnownApiError::InvalidParameter));
             }
             _ => panic!("Expected ApiError"),
         }
@@ -1665,7 +1665,7 @@ mod tests {
         match response.err().unwrap() {
             Error::ApiError(e) => {
                 assert_eq!(e.status, 429);
-                assert_eq!(e.kind, Some(ApiErrorKind::RateLimitExceeded));
+                assert_eq!(e.kind, Some(KnownApiError::RateLimitExceeded));
             }
             _ => panic!("Expected ApiError"),
         }
@@ -1708,7 +1708,7 @@ mod tests {
         match response.err().unwrap() {
             Error::ApiError(e) => {
                 assert_eq!(e.status, 501);
-                assert_eq!(e.kind, Some(ApiErrorKind::NoUserAssociatedWithApiKey));
+                assert_eq!(e.kind, Some(KnownApiError::NoUserAssociatedWithApiKey));
             }
             _ => panic!("Expected ApiError"),
         }
