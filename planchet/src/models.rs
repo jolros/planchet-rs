@@ -243,12 +243,21 @@ impl fmt::Display for Category {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct IssuingEntity {
+    pub id: i64,
+    pub name: String,
+    pub wikidata_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct NumistaType {
     pub id: i64,
-    pub url: Url,
+    pub url: Option<Url>,
     pub title: String,
     pub category: Category,
-    pub issuer: Issuer,
+    pub issuer: Option<Issuer>,
+    pub issuing_entity: Option<IssuingEntity>,
+    pub secondary_issuing_entity: Option<IssuingEntity>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
     #[serde(rename = "type")]
@@ -261,20 +270,21 @@ pub struct NumistaType {
     pub demonetization: Option<Demonetization>,
     pub weight: Option<Decimal>,
     pub size: Option<Decimal>,
+    pub size2: Option<Decimal>,
     pub thickness: Option<Decimal>,
     pub orientation: Option<Orientation>,
     pub obverse: Option<CoinSide>,
     pub reverse: Option<CoinSide>,
     pub edge: Option<CoinSide>,
     pub watermark: Option<CoinSide>,
-    pub mints: Option<Vec<MintDetail>>,
+    pub mints: Option<Vec<Mint>>,
     pub printers: Option<Vec<Printer>>,
     pub series: Option<String>,
     pub commemorated_topic: Option<String>,
     /// HTML-formatted comments.
     pub comments: Option<String>,
     pub related_types: Option<Vec<RelatedType>>,
-    pub tags: Vec<String>,
+    pub tags: Option<Vec<String>>,
     pub references: Option<Vec<Reference>>,
 }
 
@@ -288,8 +298,8 @@ pub struct Printer {
 pub struct RelatedType {
     pub id: i64,
     pub title: String,
-    pub category: Category,
-    pub issuer: Issuer,
+    pub category: Option<Category>,
+    pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
 }
@@ -297,7 +307,7 @@ pub struct RelatedType {
 #[derive(Debug, Clone, Deserialize)]
 pub struct Issue {
     pub id: i64,
-    pub is_dated: bool,
+    pub is_dated: Option<bool>,
     pub year: Option<i32>,
     pub gregorian_year: Option<i32>,
     pub min_year: Option<i32>,
@@ -320,7 +330,7 @@ pub struct SearchTypesResponse {
 pub struct SearchTypeResult {
     pub id: i64,
     pub title: String,
-    pub category: Category,
+    pub category: Option<Category>,
     pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
@@ -537,13 +547,13 @@ pub struct SearchByImageResponse {
 pub struct SearchByImageTypeResult {
     pub id: i64,
     pub title: String,
-    pub category: Category,
-    pub issuer: Issuer,
+    pub category: Option<Category>,
+    pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
     pub obverse_thumbnail: Option<Url>,
     pub reverse_thumbnail: Option<Url>,
-    pub similarity_distance: Decimal,
+    pub similarity_distance: Option<Decimal>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
