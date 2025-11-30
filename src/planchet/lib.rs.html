@@ -462,7 +462,7 @@
 <a href=#462 id=462 data-nosnippet>462</a>    ///
 <a href=#463 id=463 data-nosnippet>463</a>    /// * `mint_id` - The ID of the mint to get.
 <a href=#464 id=464 data-nosnippet>464</a>    /// * `lang` - The language to use for the response.
-<a href=#465 id=465 data-nosnippet>465</a>    </span><span class="kw">pub async fn </span>get_mint(<span class="kw-2">&amp;</span><span class="self">self</span>, mint_id: i64, lang: <span class="prelude-ty">Option</span>&lt;Language&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;MintDetail&gt; {
+<a href=#465 id=465 data-nosnippet>465</a>    </span><span class="kw">pub async fn </span>get_mint(<span class="kw-2">&amp;</span><span class="self">self</span>, mint_id: <span class="kw-2">&amp;</span>str, lang: <span class="prelude-ty">Option</span>&lt;Language&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;MintDetail&gt; {
 <a href=#466 id=466 data-nosnippet>466</a>        <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">"{}/mints/{}"</span>, <span class="self">self</span>.base_url, mint_id);
 <a href=#467 id=467 data-nosnippet>467</a>        <span class="kw">let </span>req = <span class="self">self</span>.client.get(<span class="kw-2">&amp;</span>url);
 <a href=#468 id=468 data-nosnippet>468</a>        <span class="kw">let </span>req = <span class="macro">add_lang_param!</span>(req, lang);
@@ -1365,7 +1365,7 @@
 <a href=#1365 id=1365 data-nosnippet>1365</a>        <span class="kw">let </span>mock = server.mock(<span class="string">"GET"</span>, <span class="string">"/mints"</span>)
 <a href=#1366 id=1366 data-nosnippet>1366</a>            .with_status(<span class="number">200</span>)
 <a href=#1367 id=1367 data-nosnippet>1367</a>            .with_header(<span class="string">"content-type"</span>, <span class="string">"application/json"</span>)
-<a href=#1368 id=1368 data-nosnippet>1368</a>            .with_body(<span class="string">r#"{"count": 1, "mints": [{"id": 1}]}"#</span>)
+<a href=#1368 id=1368 data-nosnippet>1368</a>            .with_body(<span class="string">r#"{"count": 1, "mints": [{"id": "1"}]}"#</span>)
 <a href=#1369 id=1369 data-nosnippet>1369</a>            .create();
 <a href=#1370 id=1370 data-nosnippet>1370</a>
 <a href=#1371 id=1371 data-nosnippet>1371</a>        <span class="kw">let </span>client = ClientBuilder::new()
@@ -1379,7 +1379,7 @@
 <a href=#1379 id=1379 data-nosnippet>1379</a>        mock.assert();
 <a href=#1380 id=1380 data-nosnippet>1380</a>        <span class="macro">assert_eq!</span>(response.count, <span class="number">1</span>);
 <a href=#1381 id=1381 data-nosnippet>1381</a>        <span class="macro">assert_eq!</span>(response.mints.len(), <span class="number">1</span>);
-<a href=#1382 id=1382 data-nosnippet>1382</a>        <span class="macro">assert_eq!</span>(response.mints[<span class="number">0</span>].id, <span class="number">1</span>);
+<a href=#1382 id=1382 data-nosnippet>1382</a>        <span class="macro">assert_eq!</span>(response.mints[<span class="number">0</span>].id, <span class="string">"1"</span>);
 <a href=#1383 id=1383 data-nosnippet>1383</a>    }
 <a href=#1384 id=1384 data-nosnippet>1384</a>
 <a href=#1385 id=1385 data-nosnippet>1385</a>    <span class="attr">#[tokio::test]
@@ -1390,7 +1390,7 @@
 <a href=#1390 id=1390 data-nosnippet>1390</a>        <span class="kw">let </span>mock = server.mock(<span class="string">"GET"</span>, <span class="string">"/mints/1"</span>)
 <a href=#1391 id=1391 data-nosnippet>1391</a>            .with_status(<span class="number">200</span>)
 <a href=#1392 id=1392 data-nosnippet>1392</a>            .with_header(<span class="string">"content-type"</span>, <span class="string">"application/json"</span>)
-<a href=#1393 id=1393 data-nosnippet>1393</a>            .with_body(<span class="string">r#"{"id": 1}"#</span>)
+<a href=#1393 id=1393 data-nosnippet>1393</a>            .with_body(<span class="string">r#"{"id": "1"}"#</span>)
 <a href=#1394 id=1394 data-nosnippet>1394</a>            .create();
 <a href=#1395 id=1395 data-nosnippet>1395</a>
 <a href=#1396 id=1396 data-nosnippet>1396</a>        <span class="kw">let </span>client = ClientBuilder::new()
@@ -1399,10 +1399,10 @@
 <a href=#1399 id=1399 data-nosnippet>1399</a>            .build()
 <a href=#1400 id=1400 data-nosnippet>1400</a>            .unwrap();
 <a href=#1401 id=1401 data-nosnippet>1401</a>
-<a href=#1402 id=1402 data-nosnippet>1402</a>        <span class="kw">let </span>response = client.get_mint(<span class="number">1</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
+<a href=#1402 id=1402 data-nosnippet>1402</a>        <span class="kw">let </span>response = client.get_mint(<span class="string">"1"</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.unwrap();
 <a href=#1403 id=1403 data-nosnippet>1403</a>
 <a href=#1404 id=1404 data-nosnippet>1404</a>        mock.assert();
-<a href=#1405 id=1405 data-nosnippet>1405</a>        <span class="macro">assert_eq!</span>(response.id, <span class="number">1</span>);
+<a href=#1405 id=1405 data-nosnippet>1405</a>        <span class="macro">assert_eq!</span>(response.id, <span class="string">"1"</span>);
 <a href=#1406 id=1406 data-nosnippet>1406</a>    }
 <a href=#1407 id=1407 data-nosnippet>1407</a>
 <a href=#1408 id=1408 data-nosnippet>1408</a>    <span class="attr">#[tokio::test]
