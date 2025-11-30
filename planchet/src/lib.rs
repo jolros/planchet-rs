@@ -56,6 +56,7 @@
 //!     }
 //! }
 //! ```
+pub mod de;
 pub mod models;
 
 use futures::stream::{self, Stream};
@@ -462,7 +463,7 @@ impl Client {
     ///
     /// * `mint_id` - The ID of the mint to get.
     /// * `lang` - The language to use for the response.
-    pub async fn get_mint(&self, mint_id: &str, lang: Option<Language>) -> Result<MintDetail> {
+    pub async fn get_mint(&self, mint_id: i64, lang: Option<Language>) -> Result<MintDetail> {
         let url = format!("{}/mints/{}", self.base_url, mint_id);
         let req = self.client.get(&url);
         let req = add_lang_param!(req, lang);
@@ -1138,11 +1139,11 @@ mod tests {
         assert_eq!(edge.picture_copyright.unwrap(), "Cyrillius");
         let mints = response.mints.unwrap();
         assert_eq!(mints.len(), 3);
-        assert_eq!(mints[0].id, "10");
+        assert_eq!(mints[0].id, 10);
         assert_eq!(mints[0].name, "United States Mint of Denver");
-        assert_eq!(mints[1].id, "11");
+        assert_eq!(mints[1].id, 11);
         assert_eq!(mints[1].name, "United States Mint of Philadelphia");
-        assert_eq!(mints[2].id, "12");
+        assert_eq!(mints[2].id, 12);
         assert_eq!(mints[2].name, "United States Mint of San Francisco");
     }
 
@@ -1365,7 +1366,7 @@ mod tests {
         let mock = server.mock("GET", "/mints")
             .with_status(200)
             .with_header("content-type", "application/json")
-            .with_body(r#"{"count": 1, "mints": [{"id": "1"}]}"#)
+            .with_body(r#"{"count": 1, "mints": [{"id": 1}]}"#)
             .create();
 
         let client = ClientBuilder::new()
@@ -1379,7 +1380,7 @@ mod tests {
         mock.assert();
         assert_eq!(response.count, 1);
         assert_eq!(response.mints.len(), 1);
-        assert_eq!(response.mints[0].id, "1");
+        assert_eq!(response.mints[0].id, 1);
     }
 
     #[tokio::test]
@@ -1399,10 +1400,10 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_mint("1", None).await.unwrap();
+        let response = client.get_mint(1, None).await.unwrap();
 
         mock.assert();
-        assert_eq!(response.id, "1");
+        assert_eq!(response.id, 1);
     }
 
     #[tokio::test]
