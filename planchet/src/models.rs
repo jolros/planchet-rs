@@ -103,7 +103,9 @@ pub struct IssuersResponse {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct MintDetail {
-    pub id: i64,
+    /// The ID of the mint. Although the API documentation specifies this as an
+    /// integer, in practice it is returned as a string.
+    pub id: String,
     pub name: Option<String>,
     pub local_name: Option<String>,
     pub place: Option<String>,
