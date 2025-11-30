@@ -41,14 +41,8 @@ async fn main() -> Result<()> {
 
     println!("Calling get_oauth_token()");
     let pre_auth_client = ClientBuilder::new().api_key(&cli.api_key).build()?;
-    let params = OAuthTokenParams {
-        grant_type: GrantType::ClientCredentials,
-        code: None,
-        client_id: None,
-        client_secret: None,
-        redirect_uri: None,
-        scope: Some("view_collection".to_string()),
-    };
+    let params = OAuthTokenParams::new(GrantType::ClientCredentials)
+        .scope("view_collection");
     let token = pre_auth_client.get_oauth_token(&params).await?;
 
     let client = ClientBuilder::new()

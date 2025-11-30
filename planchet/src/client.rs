@@ -18,7 +18,6 @@ use isolang::Language;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest_middleware::{ClientBuilder as MiddlewareClientBuilder, ClientWithMiddleware, Middleware, Next};
 use serde::{de::DeserializeOwned, Serialize};
-use std::borrow::Cow;
 use tracing::{info_span, trace, Instrument};
 
 /// The main client for interacting with the Numista API.
@@ -207,7 +206,7 @@ impl Client {
     /// * `params` - The search parameters.
     pub async fn search_types(
         &self,
-        params: &SearchTypesParams<'_>,
+        params: &SearchTypesParams,
     ) -> Result<SearchTypesResponse> {
         self.get_request("/types", Some(params)).await
     }
@@ -221,11 +220,11 @@ impl Client {
     /// * `params` - The search parameters.
     pub fn stream_all_types<'a>(
         &self,
-        params: SearchTypesParams<'a>,
+        params: SearchTypesParams,
     ) -> impl Stream<Item = Result<models::SearchTypeResult>> + 'a {
-        struct State<'a> {
+        struct State {
             client: Client,
-            params: SearchTypesParams<'a>,
+            params: SearchTypesParams,
             current_page: i64,
             buffer: std::vec::IntoIter<models::SearchTypeResult>,
             items_fetched: i64,
@@ -482,21 +481,21 @@ impl Client {
 
 /// A builder for creating a `Client`.
 #[derive(Debug, Default)]
-pub struct ClientBuilder<'a> {
-    api_key: Option<Cow<'a, str>>,
-    base_url: Option<Cow<'a, str>>,
-    bearer_token: Option<Cow<'a, str>>,
+pub struct ClientBuilder {
+    api_key: Option<String>,
+    base_url: Option<String>,
+    bearer_token: Option<String>,
     lang: Option<Language>,
 }
 
-impl<'a> ClientBuilder<'a> {
+impl ClientBuilder {
     /// Creates a new `ClientBuilder`.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Sets the API key to use for requests.
-    pub fn api_key<S: Into<Cow<'a, str>>>(mut self, api_key: S) -> Self {
+    pub fn api_key<S: Into<String>>(mut self, api_key: S) -> Self {
         self.api_key = Some(api_key.into());
         self
     }
@@ -504,13 +503,13 @@ impl<'a> ClientBuilder<'a> {
     /// Sets the base URL to use for requests.
     ///
     /// This is useful for testing.
-    pub fn base_url<S: Into<Cow<'a, str>>>(mut self, base_url: S) -> Self {
+    pub fn base_url<S: Into<String>>(mut self, base_url: S) -> Self {
         self.base_url = Some(base_url.into());
         self
     }
 
     /// Sets the bearer token to use for requests.
-    pub fn bearer_token<S: Into<Cow<'a, str>>>(mut self, bearer_token: S) -> Self {
+    pub fn bearer_token<S: Into<String>>(mut self, bearer_token: S) -> Self {
         self.bearer_token = Some(bearer_token.into());
         self
     }
@@ -522,7 +521,7 @@ impl<'a> ClientBuilder<'a> {
     }
 
     /// Sets the language code to use for requests.
-    pub fn lang_code<S: Into<Cow<'a, str>>>(mut self, lang_code: S) -> Self {
+    pub fn lang_code<S: Into<String>>(mut self, lang_code: S) -> Self {
         if let Some(l) = Language::from_639_1(&lang_code.into().to_lowercase()) {
             self.lang = Some(l);
         }
@@ -557,7 +556,6 @@ impl<'a> ClientBuilder<'a> {
 
         let base_url = self
             .base_url
-            .map(|s| s.into_owned())
             .unwrap_or_else(|| "https://api.numista.com/v3".to_string());
 
         let lang = self.lang.and_then(|l| l.to_639_1().map(|s| s.to_string()));
