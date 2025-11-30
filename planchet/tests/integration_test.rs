@@ -1,6 +1,6 @@
 use planchet::{
-    AddCollectedItem, Category, ClientBuilder, EditCollectedItem, Error, GetCollectedItemsParams,
-    KnownApiError, OAuthTokenParams, SearchTypesParams,
+    AddCollectedItemParams, Category, ClientBuilder, EditCollectedItemParams, Error,
+    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchTypesParams,
     models::{self, GrantType, Orientation},
 };
 use futures::StreamExt;
@@ -625,7 +625,7 @@ async fn add_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = AddCollectedItem {
+    let item = AddCollectedItemParams {
         type_id: 1,
         issue: None,
         quantity: None,
@@ -691,7 +691,7 @@ async fn edit_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = EditCollectedItem {
+    let item = EditCollectedItemParams {
         type_id: None,
         issue: None,
         quantity: None,
@@ -801,15 +801,15 @@ async fn search_by_image_test() {
         .build()
         .unwrap();
 
-    let request = models::SearchByImageRequest {
+    let request = models::request::SearchByImageRequest {
         category: None,
         images: vec![
-            models::Image {
-                mime_type: models::MimeType::Jpeg,
+            models::request::Image {
+                mime_type: models::request::MimeType::Jpeg,
                 image_data: "jpeg_data".to_string(),
             },
-            models::Image {
-                mime_type: models::MimeType::Png,
+            models::request::Image {
+                mime_type: models::request::MimeType::Png,
                 image_data: "png_data".to_string(),
             },
         ],

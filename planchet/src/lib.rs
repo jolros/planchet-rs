@@ -65,11 +65,12 @@ pub mod models;
 pub use client::{Client, ClientBuilder};
 pub use error::{ApiError, Error, KnownApiError, Result};
 pub use models::request::{
-    AddCollectedItem, EditCollectedItem, GetCollectedItemsParams, GradingDetails, ItemPrice,
-    OAuthTokenParams, SearchTypesParams,
+    AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, GradingDetailsParams,
+    Image, ItemPriceParams, MimeType, OAuthTokenParams, SearchByImageRequest, SearchTypesParams,
 };
 pub use models::{
     CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    Grade, IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken, PricesResponse,
-    Publication, SearchByImageResponse, SearchTypesResponse, User,
+    Grade, GradingDetails, GradingDetails as GradingDetailsResponse, ItemPrice,
+    ItemPrice as ItemPriceResponse, IssuersResponse, MintDetail, MintsResponse, NumistaType,
+    OAuthToken, PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
 };

@@ -1,7 +1,7 @@
 use crate::models::{Category, Grade, GrantType};
 use chrono;
 use rust_decimal::Decimal;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 #[derive(Debug, Serialize)]
@@ -44,7 +44,7 @@ impl GetCollectedItemsParams {
 }
 
 #[derive(Debug, Serialize)]
-pub struct AddCollectedItem {
+pub struct AddCollectedItemParams {
     #[serde(rename = "type")]
     pub type_id: i64,
     pub issue: Option<i64>,
@@ -53,7 +53,7 @@ pub struct AddCollectedItem {
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
-    pub price: Option<ItemPrice>,
+    pub price: Option<ItemPriceParams>,
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
@@ -63,11 +63,11 @@ pub struct AddCollectedItem {
     pub weight: Option<Decimal>,
     pub size: Option<Decimal>,
     pub axis: Option<i64>,
-    pub grading_details: Option<GradingDetails>,
+    pub grading_details: Option<GradingDetailsParams>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct EditCollectedItem {
+pub struct EditCollectedItemParams {
     #[serde(rename = "type")]
     pub type_id: Option<i64>,
     pub issue: Option<i64>,
@@ -76,7 +76,7 @@ pub struct EditCollectedItem {
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
-    pub price: Option<ItemPrice>,
+    pub price: Option<ItemPriceParams>,
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
@@ -86,17 +86,17 @@ pub struct EditCollectedItem {
     pub weight: Option<Decimal>,
     pub size: Option<Decimal>,
     pub axis: Option<i64>,
-    pub grading_details: Option<GradingDetails>,
+    pub grading_details: Option<GradingDetailsParams>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct ItemPrice {
+pub struct ItemPriceParams {
     pub value: Decimal,
     pub currency: String,
 }
 
 #[derive(Debug, Serialize)]
-pub struct GradingDetails {
+pub struct GradingDetailsParams {
     pub grading_company: Option<i64>,
     pub slab_grade: Option<i64>,
     pub slab_number: Option<String>,
@@ -104,6 +104,29 @@ pub struct GradingDetails {
     pub grading_designations: Option<Vec<i64>>,
     pub grading_strike: Option<i64>,
     pub grading_surface: Option<i64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SearchByImageRequest {
+    pub category: Option<Category>,
+    pub images: Vec<Image>,
+    pub max_results: Option<i64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MimeType {
+    #[serde(rename = "image/jpeg")]
+    Jpeg,
+    #[serde(rename = "image/png")]
+    Png,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Image {
+    pub mime_type: MimeType,
+    /// The image data, Base64-encoded.
+    pub image_data: String,
 }
 
 /// Parameters for searching for types.

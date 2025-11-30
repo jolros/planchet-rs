@@ -4,8 +4,8 @@ use crate::models::{
     IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken, PricesResponse,
     Publication, SearchByImageResponse, SearchTypesResponse, User,
     request::{
-        AddCollectedItem, EditCollectedItem, GetCollectedItemsParams, OAuthTokenParams,
-        SearchTypesParams,
+        AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
+        SearchByImageRequest, SearchTypesParams,
     },
 };
 use futures::stream::{self, Stream};
@@ -370,7 +370,7 @@ impl Client {
     pub async fn add_collected_item(
         &self,
         user_id: i64,
-        item: &AddCollectedItem,
+        item: &AddCollectedItemParams,
     ) -> Result<CollectedItem> {
         let url = format!("{}/users/{}/collected_items", self.base_url, user_id);
         let mut req = self.client.post(&url);
@@ -408,7 +408,7 @@ impl Client {
         &self,
         user_id: i64,
         item_id: i64,
-        item: &EditCollectedItem,
+        item: &EditCollectedItemParams,
     ) -> Result<CollectedItem> {
         let url = format!(
             "{}/users/{}/collected_items/{}",
@@ -462,7 +462,7 @@ impl Client {
     /// * `request` - The request body.
     pub async fn search_by_image(
         &self,
-        request: &models::SearchByImageRequest,
+        request: &SearchByImageRequest,
     ) -> Result<SearchByImageResponse> {
         let url = format!("{}/search_by_image", self.base_url);
         let mut req = self.client.post(&url);
