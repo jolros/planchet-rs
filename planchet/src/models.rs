@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Orientation {
     Coin,
@@ -206,7 +206,9 @@ pub struct CoinSide {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Mint {
-    pub id: i64,
+    /// The ID of the mint. Although the API documentation specifies this as an
+    /// integer, in practice it is returned as a string.
+    pub id: String,
     pub name: String,
 }
 
