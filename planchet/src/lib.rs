@@ -5,7 +5,7 @@
 //! ## Basic Search
 //!
 //! ```no_run
-//! use planchet::models::SearchTypesParams;
+//! use planchet::model::SearchTypesParams;
 //! use planchet::ClientBuilder;
 //!
 //! #[tokio::main]
@@ -25,7 +25,7 @@
 //! ## Adding a Collected Item
 //!
 //! ```no_run
-//! use planchet::models::{AddCollectedItemParams, Grade};
+//! use planchet::model::{AddCollectedItemParams, Grade};
 //! use planchet::ClientBuilder;
 //!
 //! #[tokio::main]
@@ -55,7 +55,7 @@
 //! for a search and how to handle specific API errors.
 //!
 //! ```no_run
-//! use planchet::models::SearchTypesParams;
+//! use planchet::model::SearchTypesParams;
 //! use planchet::{ClientBuilder, Error};
 //! use futures::stream::TryStreamExt;
 //!
@@ -88,7 +88,7 @@
 pub mod client;
 pub mod de;
 pub mod error;
-pub mod models;
+pub mod model;
 
 // Re-export public API
 pub use client::{Client, ClientBuilder};

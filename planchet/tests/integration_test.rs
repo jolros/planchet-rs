@@ -1,5 +1,5 @@
 use planchet::{
-    models::{
+    model::{
         self, AddCollectedItemParams, Category, EditCollectedItemParams, GetCollectedItemsParams,
         GrantType, OAuthTokenParams, Orientation, SearchByImageParams, SearchTypesParams,
     },
@@ -359,8 +359,8 @@ async fn stream_all_types_test() {
     let params = SearchTypesParams::new().q("victoria");
     let stream = client.stream_all_types(params);
 
-    let results: Vec<Result<models::SearchTypeResult, Error>> = stream.collect().await;
-    let results: Result<Vec<models::SearchTypeResult>, Error> = results.into_iter().collect();
+    let results: Vec<Result<model::SearchTypeResult, Error>> = stream.collect().await;
+    let results: Result<Vec<model::SearchTypeResult>, Error> = results.into_iter().collect();
     let results = results.unwrap();
 
     assert_eq!(results.len(), 2);
@@ -763,12 +763,12 @@ async fn search_by_image_test() {
     let request = SearchByImageParams {
         category: None,
         images: vec![
-            models::request::Image {
-                mime_type: models::request::MimeType::Jpeg,
+            model::request::Image {
+                mime_type: model::request::MimeType::Jpeg,
                 image_data: "jpeg_data".to_string(),
             },
-            models::request::Image {
-                mime_type: models::request::MimeType::Png,
+            model::request::Image {
+                mime_type: model::request::MimeType::Png,
                 image_data: "png_data".to_string(),
             },
         ],

@@ -1,4 +1,4 @@
-use crate::models::{Category, Grade, GrantType};
+use crate::model::{Category, Grade, GrantType};
 use chrono;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};

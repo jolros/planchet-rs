@@ -1,5 +1,5 @@
 use crate::error::{ApiError, ApiErrorResponse, Error, KnownApiError, Result};
-use crate::models::{
+use crate::model::{
     self,
     request::{
         AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
@@ -167,7 +167,7 @@ impl Client {
     /// # Arguments
     ///
     /// * `type_id` - The ID of the type to get the issues for.
-    pub async fn get_issues(&self, type_id: i64) -> Result<Vec<models::Issue>> {
+    pub async fn get_issues(&self, type_id: i64) -> Result<Vec<model::Issue>> {
         self.get_request(&format!("/types/{}/issues", type_id), None::<&()>)
             .await
     }
@@ -221,12 +221,12 @@ impl Client {
     pub fn stream_all_types<'a>(
         &self,
         params: SearchTypesParams,
-    ) -> impl Stream<Item = Result<models::SearchTypeResult>> + 'a {
+    ) -> impl Stream<Item = Result<model::SearchTypeResult>> + 'a {
         struct State {
             client: Client,
             params: SearchTypesParams,
             current_page: i64,
-            buffer: std::vec::IntoIter<models::SearchTypeResult>,
+            buffer: std::vec::IntoIter<model::SearchTypeResult>,
             items_fetched: i64,
             total_items: Option<i64>,
         }

@@ -29,7 +29,7 @@ planchet = { git = "https://github.com/jolros/planchet-rs.git", branch = "main" 
 ### Usage
 
 ```rust
-use planchet::models::SearchTypesParams;
+use planchet::model::SearchTypesParams;
 use planchet::ClientBuilder;
 
 #[tokio::main]
