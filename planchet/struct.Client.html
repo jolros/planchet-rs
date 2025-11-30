@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The main client for interacting with the Numista API."><title>Client in planchet - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="planchet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.1 (ed61e7d7e 2025-11-07)" data-channel="1.91.1" data-search-js="search-e256b49e.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../static.files/storage-e2aeef58.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc struct"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">Client</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../planchet/index.html">planchet</a><span class="version">0.1.0</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">Client</a></h2><h3><a href="#implementations">Methods</a></h3><ul class="block method"><li><a href="#method.add_collected_item" title="add_collected_item">add_collected_item</a></li><li><a href="#method.delete_collected_item" title="delete_collected_item">delete_collected_item</a></li><li><a href="#method.edit_collected_item" title="edit_collected_item">edit_collected_item</a></li><li><a href="#method.get_catalogues" title="get_catalogues">get_catalogues</a></li><li><a href="#method.get_collected_item" title="get_collected_item">get_collected_item</a></li><li><a href="#method.get_collected_items" title="get_collected_items">get_collected_items</a></li><li><a href="#method.get_issuers" title="get_issuers">get_issuers</a></li><li><a href="#method.get_issues" title="get_issues">get_issues</a></li><li><a href="#method.get_mint" title="get_mint">get_mint</a></li><li><a href="#method.get_mints" title="get_mints">get_mints</a></li><li><a href="#method.get_oauth_token" title="get_oauth_token">get_oauth_token</a></li><li><a href="#method.get_prices" title="get_prices">get_prices</a></li><li><a href="#method.get_publication" title="get_publication">get_publication</a></li><li><a href="#method.get_type" title="get_type">get_type</a></li><li><a href="#method.get_user" title="get_user">get_user</a></li><li><a href="#method.get_user_collections" title="get_user_collections">get_user_collections</a></li><li><a href="#method.search_by_image" title="search_by_image">search_by_image</a></li><li><a href="#method.search_types" title="search_types">search_types</a></li><li><a href="#method.stream_all_types" title="stream_all_types">stream_all_types</a></li></ul><h3><a href="#trait-implementations">Trait Implementations</a></h3><ul class="block trait-implementation"><li><a href="#impl-Clone-for-Client" title="Clone">Clone</a></li><li><a href="#impl-Debug-for-Client" title="Debug">Debug</a></li></ul><h3><a href="#synthetic-implementations">Auto Trait Implementations</a></h3><ul class="block synthetic-implementation"><li><a href="#impl-RefUnwindSafe-for-Client" title="!RefUnwindSafe">!RefUnwindSafe</a></li><li><a href="#impl-UnwindSafe-for-Client" title="!UnwindSafe">!UnwindSafe</a></li><li><a href="#impl-Freeze-for-Client" title="Freeze">Freeze</a></li><li><a href="#impl-Send-for-Client" title="Send">Send</a></li><li><a href="#impl-Sync-for-Client" title="Sync">Sync</a></li><li><a href="#impl-Unpin-for-Client" title="Unpin">Unpin</a></li></ul><h3><a href="#blanket-implementations">Blanket Implementations</a></h3><ul class="block blanket-implementation"><li><a href="#impl-Any-for-T" title="Any">Any</a></li><li><a href="#impl-Borrow%3CT%3E-for-T" title="Borrow&#60;T&#62;">Borrow&#60;T&#62;</a></li><li><a href="#impl-BorrowMut%3CT%3E-for-T" title="BorrowMut&#60;T&#62;">BorrowMut&#60;T&#62;</a></li><li><a href="#impl-CloneToUninit-for-T" title="CloneToUninit">CloneToUninit</a></li><li><a href="#impl-From%3CT%3E-for-T" title="From&#60;T&#62;">From&#60;T&#62;</a></li><li><a href="#impl-Instrument-for-T" title="Instrument">Instrument</a></li><li><a href="#impl-Into%3CU%3E-for-T" title="Into&#60;U&#62;">Into&#60;U&#62;</a></li><li><a href="#impl-PolicyExt-for-T" title="PolicyExt">PolicyExt</a></li><li><a href="#impl-ToOwned-for-T" title="ToOwned">ToOwned</a></li><li><a href="#impl-TryFrom%3CU%3E-for-T" title="TryFrom&#60;U&#62;">TryFrom&#60;U&#62;</a></li><li><a href="#impl-TryInto%3CU%3E-for-T" title="TryInto&#60;U&#62;">TryInto&#60;U&#62;</a></li><li><a href="#impl-WithSubscriber-for-T" title="WithSubscriber">WithSubscriber</a></li></ul></section><div id="rustdoc-modnav"><h2 class="in-crate"><a href="index.html">In crate planchet</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="index.html">planchet</a></div><h1>Struct <span class="struct">Client</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/planchet/lib.rs.html#149-152">Source</a> </span></div><pre class="rust item-decl"><code>pub struct Client { <span class="comment">/* private fields */</span> }</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The main client for interacting with the Numista API.</p>
-</div></details><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Client" class="impl"><a class="src rightside" href="../src/planchet/lib.rs.html#264-673">Source</a><a href="#impl-Client" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Client.html" title="struct planchet::Client">Client</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.get_type" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#271-281">Source</a><h4 class="code-header">pub async fn <a href="#method.get_type" class="fn">get_type</a>(
+</div></details><h2 id="implementations" class="section-header">Implementations<a href="#implementations" class="anchor">§</a></h2><div id="implementations-list"><details class="toggle implementors-toggle" open><summary><section id="impl-Client" class="impl"><a class="src rightside" href="../src/planchet/lib.rs.html#254-627">Source</a><a href="#impl-Client" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.Client.html" title="struct planchet::Client">Client</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.get_type" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#275-283">Source</a><h4 class="code-header">pub async fn <a href="#method.get_type" class="fn">get_type</a>(
     &amp;self,
     type_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;,
@@ -9,7 +9,7 @@
 <li><code>type_id</code> - The ID of the type to get.</li>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_issues" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#289-299">Source</a><h4 class="code-header">pub async fn <a href="#method.get_issues" class="fn">get_issues</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_issues" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#291-299">Source</a><h4 class="code-header">pub async fn <a href="#method.get_issues" class="fn">get_issues</a>(
     &amp;self,
     type_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;,
@@ -19,7 +19,7 @@
 <li><code>type_id</code> - The ID of the type to get the issues for.</li>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_prices" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#308-334">Source</a><h4 class="code-header">pub async fn <a href="#method.get_prices" class="fn">get_prices</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_prices" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#308-332">Source</a><h4 class="code-header">pub async fn <a href="#method.get_prices" class="fn">get_prices</a>(
     &amp;self,
     type_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     issue_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
@@ -32,7 +32,7 @@
 <li><code>issue_id</code> - The ID of the issue.</li>
 <li><code>currency</code> - The currency to get the prices in.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.search_types" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#341-352">Source</a><h4 class="code-header">pub async fn <a href="#method.search_types" class="fn">search_types</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.search_types" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#339-344">Source</a><h4 class="code-header">pub async fn <a href="#method.search_types" class="fn">search_types</a>(
     &amp;self,
     params: &amp;<a class="struct" href="struct.SearchTypesParams.html" title="struct planchet::SearchTypesParams">SearchTypesParams</a>&lt;'_&gt;,
 ) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.SearchTypesResponse.html" title="struct planchet::models::SearchTypesResponse">SearchTypesResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Searches for types in the Numista catalogue.</p>
@@ -40,7 +40,7 @@
 <ul>
 <li><code>params</code> - The search parameters.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.stream_all_types" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#361-432">Source</a><h4 class="code-header">pub fn <a href="#method.stream_all_types" class="fn">stream_all_types</a>&lt;'a&gt;(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.stream_all_types" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#353-424">Source</a><h4 class="code-header">pub fn <a href="#method.stream_all_types" class="fn">stream_all_types</a>&lt;'a&gt;(
     &amp;self,
     params: <a class="struct" href="struct.SearchTypesParams.html" title="struct planchet::SearchTypesParams">SearchTypesParams</a>&lt;'a&gt;,
 ) -&gt; impl Stream&lt;Item = <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.SearchTypeResult.html" title="struct planchet::models::SearchTypeResult">SearchTypeResult</a>&gt;&gt; + 'a</h4></section></summary><div class="docblock"><p>Returns a stream of all types matching the search parameters.</p>
@@ -49,7 +49,7 @@
 <ul>
 <li><code>params</code> - The search parameters.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_issuers" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#439-445">Source</a><h4 class="code-header">pub async fn <a href="#method.get_issuers" class="fn">get_issuers</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_issuers" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#431-434">Source</a><h4 class="code-header">pub async fn <a href="#method.get_issuers" class="fn">get_issuers</a>(
     &amp;self,
     lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;,
 ) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.IssuersResponse.html" title="struct planchet::models::IssuersResponse">IssuersResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the list of issuers.</p>
@@ -57,12 +57,12 @@
 <ul>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_mints" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#452-458">Source</a><h4 class="code-header">pub async fn <a href="#method.get_mints" class="fn">get_mints</a>(&amp;self, lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.MintsResponse.html" title="struct planchet::models::MintsResponse">MintsResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the list of mints.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_mints" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#441-444">Source</a><h4 class="code-header">pub async fn <a href="#method.get_mints" class="fn">get_mints</a>(&amp;self, lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.MintsResponse.html" title="struct planchet::models::MintsResponse">MintsResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the list of mints.</p>
 <h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments</h5>
 <ul>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_mint" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#466-472">Source</a><h4 class="code-header">pub async fn <a href="#method.get_mint" class="fn">get_mint</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_mint" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#452-456">Source</a><h4 class="code-header">pub async fn <a href="#method.get_mint" class="fn">get_mint</a>(
     &amp;self,
     mint_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;,
@@ -72,13 +72,13 @@
 <li><code>mint_id</code> - The ID of the mint to get.</li>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_catalogues" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#475-482">Source</a><h4 class="code-header">pub async fn <a href="#method.get_catalogues" class="fn">get_catalogues</a>(&amp;self) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.CataloguesResponse.html" title="struct planchet::models::CataloguesResponse">CataloguesResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the list of catalogues.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_publication" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#489-496">Source</a><h4 class="code-header">pub async fn <a href="#method.get_publication" class="fn">get_publication</a>(&amp;self, id: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.str.html">str</a>) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.Publication.html" title="struct planchet::models::Publication">Publication</a>&gt;</h4></section></summary><div class="docblock"><p>Gets a single publication.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_catalogues" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#459-461">Source</a><h4 class="code-header">pub async fn <a href="#method.get_catalogues" class="fn">get_catalogues</a>(&amp;self) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.CataloguesResponse.html" title="struct planchet::models::CataloguesResponse">CataloguesResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the list of catalogues.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_publication" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#468-471">Source</a><h4 class="code-header">pub async fn <a href="#method.get_publication" class="fn">get_publication</a>(&amp;self, id: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.str.html">str</a>) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.Publication.html" title="struct planchet::models::Publication">Publication</a>&gt;</h4></section></summary><div class="docblock"><p>Gets a single publication.</p>
 <h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments</h5>
 <ul>
 <li><code>id</code> - The ID of the publication to get.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_user" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#504-510">Source</a><h4 class="code-header">pub async fn <a href="#method.get_user" class="fn">get_user</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_user" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#479-483">Source</a><h4 class="code-header">pub async fn <a href="#method.get_user" class="fn">get_user</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     lang: <a class="enum" href="https://doc.rust-lang.org/1.91.1/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;Language&gt;,
@@ -88,7 +88,7 @@
 <li><code>user_id</code> - The ID of the user to get.</li>
 <li><code>lang</code> - The language to use for the response.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_user_collections" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#517-524">Source</a><h4 class="code-header">pub async fn <a href="#method.get_user_collections" class="fn">get_user_collections</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_user_collections" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#490-493">Source</a><h4 class="code-header">pub async fn <a href="#method.get_user_collections" class="fn">get_user_collections</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
 ) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.CollectionsResponse.html" title="struct planchet::models::CollectionsResponse">CollectionsResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Gets the collections of a user.</p>
@@ -96,7 +96,7 @@
 <ul>
 <li><code>user_id</code> - The ID of the user to get the collections for.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_collected_items" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#532-547">Source</a><h4 class="code-header">pub async fn <a href="#method.get_collected_items" class="fn">get_collected_items</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_collected_items" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#501-511">Source</a><h4 class="code-header">pub async fn <a href="#method.get_collected_items" class="fn">get_collected_items</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     params: &amp;<a class="struct" href="struct.GetCollectedItemsParams.html" title="struct planchet::GetCollectedItemsParams">GetCollectedItemsParams</a>,
@@ -106,7 +106,7 @@
 <li><code>user_id</code> - The ID of the user to get the collected items for.</li>
 <li><code>params</code> - The search parameters.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.add_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#555-571">Source</a><h4 class="code-header">pub async fn <a href="#method.add_collected_item" class="fn">add_collected_item</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.add_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#519-535">Source</a><h4 class="code-header">pub async fn <a href="#method.add_collected_item" class="fn">add_collected_item</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     item: &amp;<a class="struct" href="struct.AddCollectedItem.html" title="struct planchet::AddCollectedItem">AddCollectedItem</a>,
@@ -116,7 +116,7 @@
 <li><code>user_id</code> - The ID of the user to add the collected item to.</li>
 <li><code>item</code> - The item to add.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#579-589">Source</a><h4 class="code-header">pub async fn <a href="#method.get_collected_item" class="fn">get_collected_item</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#543-549">Source</a><h4 class="code-header">pub async fn <a href="#method.get_collected_item" class="fn">get_collected_item</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     item_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
@@ -126,7 +126,7 @@
 <li><code>user_id</code> - The ID of the user.</li>
 <li><code>item_id</code> - The ID of the item to get.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.edit_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#598-615">Source</a><h4 class="code-header">pub async fn <a href="#method.edit_collected_item" class="fn">edit_collected_item</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.edit_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#558-575">Source</a><h4 class="code-header">pub async fn <a href="#method.edit_collected_item" class="fn">edit_collected_item</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     item_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
@@ -138,7 +138,7 @@
 <li><code>item_id</code> - The ID of the item to edit.</li>
 <li><code>item</code> - The fields to edit.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.delete_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#623-638">Source</a><h4 class="code-header">pub async fn <a href="#method.delete_collected_item" class="fn">delete_collected_item</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.delete_collected_item" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#583-598">Source</a><h4 class="code-header">pub async fn <a href="#method.delete_collected_item" class="fn">delete_collected_item</a>(
     &amp;self,
     user_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
     item_id: <a class="primitive" href="https://doc.rust-lang.org/1.91.1/std/primitive.i64.html">i64</a>,
@@ -148,7 +148,7 @@
 <li><code>user_id</code> - The ID of the user.</li>
 <li><code>item_id</code> - The ID of the item to delete.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_oauth_token" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#645-653">Source</a><h4 class="code-header">pub async fn <a href="#method.get_oauth_token" class="fn">get_oauth_token</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_oauth_token" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#605-607">Source</a><h4 class="code-header">pub async fn <a href="#method.get_oauth_token" class="fn">get_oauth_token</a>(
     &amp;self,
     params: &amp;<a class="struct" href="struct.OAuthTokenParams.html" title="struct planchet::OAuthTokenParams">OAuthTokenParams</a>,
 ) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.OAuthToken.html" title="struct planchet::models::OAuthToken">OAuthToken</a>&gt;</h4></section></summary><div class="docblock"><p>Gets an OAuth token.</p>
@@ -156,7 +156,7 @@
 <ul>
 <li><code>params</code> - The parameters for getting the token.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.search_by_image" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#660-672">Source</a><h4 class="code-header">pub async fn <a href="#method.search_by_image" class="fn">search_by_image</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.search_by_image" class="method"><a class="src rightside" href="../src/planchet/lib.rs.html#614-626">Source</a><h4 class="code-header">pub async fn <a href="#method.search_by_image" class="fn">search_by_image</a>(
     &amp;self,
     request: &amp;<a class="struct" href="models/struct.SearchByImageRequest.html" title="struct planchet::models::SearchByImageRequest">SearchByImageRequest</a>,
 ) -&gt; <a class="type" href="type.Result.html" title="type planchet::Result">Result</a>&lt;<a class="struct" href="models/struct.SearchByImageResponse.html" title="struct planchet::models::SearchByImageResponse">SearchByImageResponse</a>&gt;</h4></section></summary><div class="docblock"><p>Searches for types by image.</p>
