@@ -1,6 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
-use planchet::{models::GrantType, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams};
+use planchet::{
+    models::GrantType, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams, SearchTypesParams,
+};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
@@ -109,6 +111,9 @@ async fn main() -> Result<()> {
     println!("{:#?}", client.get_user(cli.user_id, None).await?);
     println!("Calling get_publication()");
     println!("{:#?}", client.get_publication("L106610").await?);
+    println!("Calling search_types()");
+    let params = SearchTypesParams::new().q("victoria");
+    println!("{:#?}", client.search_types(&params).await?);
 
     Ok(())
 }
