@@ -5,6 +5,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+pub mod request;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -563,9 +564,4 @@ pub struct SearchByImageTypeResult {
     pub obverse_thumbnail: Option<Url>,
     pub reverse_thumbnail: Option<Url>,
     pub similarity_distance: Option<Decimal>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApiError {
-    pub error_message: String,
 }
