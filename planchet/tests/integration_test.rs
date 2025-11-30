@@ -1,6 +1,6 @@
 use planchet::{
     AddCollectedItemParams, Category, ClientBuilder, EditCollectedItemParams, Error,
-    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchByImageRequest,
+    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchByImageParams,
     SearchTypesParams, models::{self, GrantType, Orientation},
 };
 use futures::StreamExt;
@@ -801,7 +801,7 @@ async fn search_by_image_test() {
         .build()
         .unwrap();
 
-    let request = SearchByImageRequest {
+    let request = SearchByImageParams {
         category: None,
         images: vec![
             models::request::Image {

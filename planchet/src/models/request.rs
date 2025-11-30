@@ -107,7 +107,7 @@ pub struct GradingDetailsParams {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SearchByImageRequest {
+pub struct SearchByImageParams {
     pub category: Option<Category>,
     pub images: Vec<Image>,
     pub max_results: Option<i64>,

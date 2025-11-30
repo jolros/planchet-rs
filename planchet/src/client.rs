@@ -5,7 +5,7 @@ use crate::models::{
     Publication, SearchByImageResponse, SearchTypesResponse, User,
     request::{
         AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
-        SearchByImageRequest, SearchTypesParams,
+        SearchByImageParams, SearchTypesParams,
     },
 };
 use futures::stream::{self, Stream};
@@ -462,7 +462,7 @@ impl Client {
     /// * `request` - The request body.
     pub async fn search_by_image(
         &self,
-        request: &SearchByImageRequest,
+        request: &SearchByImageParams,
     ) -> Result<SearchByImageResponse> {
         let url = format!("{}/search_by_image", self.base_url);
         let mut req = self.client.post(&url);
