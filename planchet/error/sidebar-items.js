@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error","KnownApiError"],"struct":["ApiError","ApiErrorResponse"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"struct":["ApiError"],"type":["Result"]};

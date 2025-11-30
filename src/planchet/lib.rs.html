@@ -76,7 +76,7 @@
 <a href=#76 id=76 data-nosnippet>76</a>//!         Ok(types) =&gt; {
 <a href=#77 id=77 data-nosnippet>77</a>//!             println!("Successfully fetched {} types.", types.len());
 <a href=#78 id=78 data-nosnippet>78</a>//!         }
-<a href=#79 id=79 data-nosnippet>79</a>//!         Err(Error::ApiError(e)) if e.kind == Some(planchet::KnownApiError::RateLimitExceeded) =&gt; {
+<a href=#79 id=79 data-nosnippet>79</a>//!         Err(Error::ApiError(e)) if e.is_rate_limit_exceeded() =&gt; {
 <a href=#80 id=80 data-nosnippet>80</a>//!             eprintln!("Rate limit exceeded. Please try again later.");
 <a href=#81 id=81 data-nosnippet>81</a>//!         }
 <a href=#82 id=82 data-nosnippet>82</a>//!         Err(e) =&gt; {
@@ -92,4 +92,4 @@
 <a href=#92 id=92 data-nosnippet>92</a>
 <a href=#93 id=93 data-nosnippet>93</a><span class="comment">// Re-export public API
 <a href=#94 id=94 data-nosnippet>94</a></span><span class="kw">pub use </span>client::{Client, ClientBuilder};
-<a href=#95 id=95 data-nosnippet>95</a><span class="kw">pub use </span>error::{ApiError, Error, KnownApiError, <span class="prelude-ty">Result</span>};</code></pre></div></section></main></body></html>
+<a href=#95 id=95 data-nosnippet>95</a><span class="kw">pub use </span>error::{ApiError, Error, <span class="prelude-ty">Result</span>};</code></pre></div></section></main></body></html>
