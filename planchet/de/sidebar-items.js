@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["de_i64_from_str_or_int"]};
+window.SIDEBAR_ITEMS = {"fn":["de_i64_from_str_or_int","de_optional_i32_from_str","de_optional_i64_from_str_or_int"]};
