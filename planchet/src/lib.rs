@@ -69,7 +69,7 @@ use models::{
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest_middleware::{ClientBuilder as MiddlewareClientBuilder, ClientWithMiddleware, Middleware, Next};
 use http::Extensions;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Serialize, Deserialize};
 use std::borrow::Cow;
 use std::fmt;
 use tracing::{info_span, trace, Instrument};
@@ -151,9 +151,14 @@ pub struct Client {
     base_url: String,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+struct ApiErrorResponse {
+    pub error_message: String,
+}
+
 async fn parse_api_error(response: reqwest::Response) -> Error {
     let status_code = response.status().as_u16();
-    let api_error_response = match response.json::<models::ApiError>().await {
+    let api_error_response = match response.json::<ApiErrorResponse>().await {
         Ok(api_error) => api_error,
         Err(e) => return e.into(),
     };

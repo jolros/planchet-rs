@@ -1,25 +1,3 @@
-pub mod request {
-    use rust_decimal::Decimal;
-    use serde::Serialize;
-
-    #[derive(Debug, Serialize)]
-    pub struct ItemPrice {
-        pub value: Decimal,
-        pub currency: String,
-    }
-
-    #[derive(Debug, Serialize)]
-    pub struct GradingDetails {
-        pub grading_company: Option<i64>,
-        pub slab_grade: Option<i64>,
-        pub slab_number: Option<String>,
-        pub cac_sticker: Option<String>,
-        pub grading_designations: Option<Vec<i64>>,
-        pub grading_strike: Option<i64>,
-        pub grading_surface: Option<i64>,
-    }
-}
-
 use chrono::NaiveDate;
 use iso_currency::Currency as IsoCurrency;
 use isolang::Language;
@@ -591,11 +569,6 @@ pub struct SearchByImageTypeResult {
     pub similarity_distance: Option<Decimal>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct ApiError {
-    pub error_message: String,
-}
-
 #[derive(Debug, Serialize)]
 pub struct OAuthTokenParams {
     pub grant_type: GrantType,
@@ -645,7 +618,7 @@ pub struct AddCollectedItemParams {
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
-    pub price: Option<request::ItemPrice>,
+    pub price: Option<ItemPriceParams>,
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
@@ -655,7 +628,24 @@ pub struct AddCollectedItemParams {
     pub weight: Option<Decimal>,
     pub size: Option<Decimal>,
     pub axis: Option<i64>,
-    pub grading_details: Option<request::GradingDetails>,
+    pub grading_details: Option<GradingDetailsParams>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ItemPriceParams {
+    pub value: Decimal,
+    pub currency: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GradingDetailsParams {
+    pub grading_company: Option<i64>,
+    pub slab_grade: Option<i64>,
+    pub slab_number: Option<String>,
+    pub cac_sticker: Option<String>,
+    pub grading_designations: Option<Vec<i64>>,
+    pub grading_strike: Option<i64>,
+    pub grading_surface: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -668,7 +658,7 @@ pub struct EditCollectedItemParams {
     pub for_swap: Option<bool>,
     pub private_comment: Option<String>,
     pub public_comment: Option<String>,
-    pub price: Option<request::ItemPrice>,
+    pub price: Option<ItemPriceParams>,
     pub collection: Option<i64>,
     pub storage_location: Option<String>,
     pub acquisition_place: Option<String>,
@@ -678,7 +668,7 @@ pub struct EditCollectedItemParams {
     pub weight: Option<Decimal>,
     pub size: Option<Decimal>,
     pub axis: Option<i64>,
-    pub grading_details: Option<request::GradingDetails>,
+    pub grading_details: Option<GradingDetailsParams>,
 }
 
 /// Parameters for searching for types.
