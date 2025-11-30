@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 pub mod request;
+pub mod response;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -81,7 +82,7 @@ pub struct ItemPrice {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct PricesResponse {
+pub struct GradePrices {
     pub currency: IsoCurrency,
     pub prices: Vec<GradePrice>,
 }
@@ -94,12 +95,6 @@ pub struct IssuerDetail {
     pub wikidata_id: Option<String>,
     pub parent: Option<Issuer>,
     pub level: Option<i8>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct IssuersResponse {
-    pub count: i64,
-    pub issuers: Vec<IssuerDetail>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -119,12 +114,6 @@ pub struct MintDetail {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct MintsResponse {
-    pub count: i64,
-    pub mints: Vec<MintDetail>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct CatalogueDetail {
     pub id: i64,
     pub code: String,
@@ -132,12 +121,6 @@ pub struct CatalogueDetail {
     pub author: String,
     pub publisher: String,
     pub isbn13: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct CataloguesResponse {
-    pub count: i64,
-    pub catalogues: Vec<CatalogueDetail>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -328,12 +311,6 @@ pub struct Issue {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct SearchTypesResponse {
-    pub count: i64,
-    pub types: Vec<SearchTypeResult>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct SearchTypeResult {
     pub id: i64,
     pub title: String,
@@ -420,12 +397,6 @@ pub struct Collection {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct CollectionsResponse {
-    pub count: i64,
-    pub collections: Vec<Collection>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct CollectedItem {
     pub id: i64,
     pub quantity: i64,
@@ -506,7 +477,7 @@ pub struct GradingSurface {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct CollectedItemsResponse {
+pub struct CollectedItems {
     pub item_count: i64,
     pub item_for_swap_count: i64,
     pub item_type_count: i64,
@@ -520,14 +491,6 @@ pub struct OAuthToken {
     pub token_type: String,
     pub expires_in: i64,
     pub user_id: i64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct SearchByImageResponse {
-    pub count: i64,
-    pub types: Vec<SearchByImageTypeResult>,
-    pub experimental_tentative_year: Option<i64>,
-    pub experimental_tentative_grade: Option<Grade>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

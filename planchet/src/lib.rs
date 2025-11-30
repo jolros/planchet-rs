@@ -68,9 +68,12 @@ pub use models::request::{
     AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, GradingDetailsParams,
     Image, ItemPriceParams, MimeType, OAuthTokenParams, SearchByImageRequest, SearchTypesParams,
 };
+pub use models::response::{
+    CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse, SearchByImageResponse,
+    SearchTypesResponse,
+};
 pub use models::{
-    CataloguesResponse, Category, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    Grade, GradingDetails, GradingDetails as GradingDetailsResponse, ItemPrice,
-    ItemPrice as ItemPriceResponse, IssuersResponse, MintDetail, MintsResponse, NumistaType,
-    OAuthToken, PricesResponse, Publication, SearchByImageResponse, SearchTypesResponse, User,
+    Category, CollectedItem, CollectedItems, Grade, GradePrices, GradingDetails,
+    GradingDetails as GradingDetailsResponse, ItemPrice, ItemPrice as ItemPriceResponse,
+    MintDetail, NumistaType, OAuthToken, Publication, User,
 };

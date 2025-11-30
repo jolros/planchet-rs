@@ -1,12 +1,16 @@
-use crate::error::{ApiError, Error, KnownApiError, Result, ApiErrorResponse};
+use crate::error::{ApiError, ApiErrorResponse, Error, KnownApiError, Result};
 use crate::models::{
-    self, CataloguesResponse, CollectedItem, CollectedItemsResponse, CollectionsResponse,
-    IssuersResponse, MintDetail, MintsResponse, NumistaType, OAuthToken, PricesResponse,
-    Publication, SearchByImageResponse, SearchTypesResponse, User,
+    self,
     request::{
         AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
         SearchByImageRequest, SearchTypesParams,
     },
+    response::{
+        CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse,
+        SearchByImageResponse, SearchTypesResponse,
+    },
+    CollectedItem, CollectedItems, GradePrices, MintDetail, NumistaType, OAuthToken, Publication,
+    User,
 };
 use futures::stream::{self, Stream};
 use http::Extensions;
@@ -181,7 +185,7 @@ impl Client {
         type_id: i64,
         issue_id: i64,
         currency: Option<&str>,
-    ) -> Result<PricesResponse> {
+    ) -> Result<GradePrices> {
         #[derive(Serialize)]
         struct GetPricesParams<'a> {
             currency: Option<&'a str>,
@@ -353,7 +357,7 @@ impl Client {
         &self,
         user_id: i64,
         params: &GetCollectedItemsParams,
-    ) -> Result<CollectedItemsResponse> {
+    ) -> Result<CollectedItems> {
         self.get_request(
             &format!("/users/{}/collected_items", user_id),
             Some(params),
