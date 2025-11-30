@@ -3,7 +3,7 @@ use planchet::{
         self, AddCollectedItemParams, Category, EditCollectedItemParams, GetCollectedItemsParams,
         GrantType, OAuthTokenParams, Orientation, SearchByImageParams, SearchTypesParams,
     },
-    ClientBuilder, Error, KnownApiError,
+    ClientBuilder, Error,
 };
 use futures::StreamExt;
 use rust_decimal::Decimal;
@@ -804,7 +804,7 @@ async fn unauthorized_error_test() {
     match response.err().unwrap() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 401);
-            assert_eq!(e.kind, Some(KnownApiError::Unauthorized));
+            assert!(e.is_unauthorized());
         }
         _ => panic!("Expected ApiError"),
     }
@@ -835,7 +835,7 @@ async fn not_found_error_test() {
     match response.err().unwrap() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 404);
-            assert_eq!(e.kind, Some(KnownApiError::NotFound));
+            assert!(e.is_not_found());
         }
         _ => panic!("Expected ApiError"),
     }
@@ -869,7 +869,7 @@ async fn invalid_parameter_error_test() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 400);
             assert_eq!(e.message, "Invalid parameter");
-            assert_eq!(e.kind, Some(KnownApiError::InvalidParameter));
+            assert!(e.is_invalid_parameter());
         }
         _ => panic!("Expected ApiError"),
     }
@@ -900,7 +900,7 @@ async fn rate_limit_exceeded_error_test() {
     match response.err().unwrap() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 429);
-            assert_eq!(e.kind, Some(KnownApiError::RateLimitExceeded));
+            assert!(e.is_rate_limit_exceeded());
         }
         _ => panic!("Expected ApiError"),
     }
@@ -936,7 +936,7 @@ async fn no_user_associated_error_test() {
     match response.err().unwrap() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 501);
-            assert_eq!(e.kind, Some(KnownApiError::NoUserAssociatedWithApiKey));
+            assert!(e.is_no_user_associated_with_api_key());
         }
         _ => panic!("Expected ApiError"),
     }
@@ -968,7 +968,6 @@ async fn generic_api_error_test() {
         Error::ApiError(e) => {
             assert_eq!(e.message, "Internal Server Error");
             assert_eq!(e.status, 500);
-            assert!(e.kind.is_none());
         }
         _ => panic!("Expected a generic ApiError"),
     }
