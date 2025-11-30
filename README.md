@@ -35,7 +35,7 @@ use planchet::ClientBuilder;
 #[tokio::main]
 async fn main() {
     let client = ClientBuilder::new()
-        .api_key("YOUR_API_KEY".to_string())
+        .api_key("YOUR_API_KEY")
         .build()
         .unwrap();
 

@@ -627,26 +627,9 @@ async fn add_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = AddCollectedItemParams {
-        type_id: 1,
-        issue: None,
-        quantity: None,
-        grade: None,
-        for_swap: None,
-        private_comment: None,
-        public_comment: None,
-        price: None,
-        collection: None,
-        storage_location: None,
-        acquisition_place: None,
-        acquisition_date: None,
-        serial_number: None,
-        internal_id: None,
-        weight: None,
-        size: None,
-        axis: None,
-        grading_details: None,
-    };
+    let item = AddCollectedItemParams::new(1)
+        .quantity(2)
+        .private_comment("Test comment");
     let response = client.add_collected_item(1, &item).await.unwrap();
 
     mock.assert();
@@ -693,26 +676,7 @@ async fn edit_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = EditCollectedItemParams {
-        type_id: None,
-        issue: None,
-        quantity: None,
-        grade: None,
-        for_swap: None,
-        private_comment: None,
-        public_comment: None,
-        price: None,
-        collection: None,
-        storage_location: None,
-        acquisition_place: None,
-        acquisition_date: None,
-        serial_number: None,
-        internal_id: None,
-        weight: None,
-        size: None,
-        axis: None,
-        grading_details: None,
-    };
+    let item = EditCollectedItemParams::new().quantity(5);
     let response = client.edit_collected_item(1, 1, &item).await.unwrap();
 
     mock.assert();
@@ -758,14 +722,7 @@ async fn get_oauth_token_test() {
         .build()
         .unwrap();
 
-    let params = OAuthTokenParams {
-        grant_type: GrantType::ClientCredentials,
-        code: None,
-        client_id: None,
-        client_secret: None,
-        redirect_uri: None,
-        scope: None,
-    };
+    let params = OAuthTokenParams::new(GrantType::ClientCredentials);
     let response = client.get_oauth_token(&params).await.unwrap();
 
     mock.assert();
@@ -971,14 +928,7 @@ async fn no_user_associated_error_test() {
         .build()
         .unwrap();
 
-    let params = OAuthTokenParams {
-        grant_type: GrantType::ClientCredentials,
-        code: None,
-        client_id: None,
-        client_secret: None,
-        redirect_uri: None,
-        scope: None,
-    };
+    let params = OAuthTokenParams::new(GrantType::ClientCredentials);
     let response = client.get_oauth_token(&params).await;
 
     mock.assert();
