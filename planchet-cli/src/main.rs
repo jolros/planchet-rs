@@ -1,14 +1,13 @@
 //! A command-line interface for the `planchet` library.
 //!
-//! This tool provides commands to fetch and display a user's coin collection
-//! data from the Numista API.
+//! This tool provides commands to interact with the Numista catalogue and user collections.
 //!
 //! # Usage
 //!
 //! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
 //!
 //! ```bash
-//! planchet-cli --api-key <YOUR_API_KEY> <COMMAND>
+//! planchet-cli --api-key <YOUR_API_KEY> <COMMAND> <COMMAND_ARGS>
 //! ```
 //!
 //! # Commands
