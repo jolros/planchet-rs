@@ -1006,6 +1006,71 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn get_publication_full_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server.mock("GET", "/publications/L106610")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{
+              "id": "L106610",
+              "url": "https://numista.com/L106610",
+              "type": "volume",
+              "title": "Cast Chinese Coins",
+              "bibliographical_notice": "David Hartill; 2017. <em>Cast Chinese Coins</em> (2<sup>nd</sup> Edition). Self-published, London, United Kingdom.",
+              "edition": "2nd Edition",
+              "languages": [
+                "en"
+              ],
+              "year": "2017",
+              "page_count": 453,
+              "cover": "softcover",
+              "isbn10": "1787194949",
+              "isbn13": "9781787194946",
+              "oclc_number": "1000342699",
+              "contributors": [
+                {
+                  "role": "author",
+                  "name": "David Hartill",
+                  "id": "369"
+                }
+              ],
+              "publishers": [
+                {
+                  "name": "Self-published",
+                  "id": "93"
+                }
+              ],
+              "publication_places": [
+                {
+                  "name": "London, United Kingdom",
+                  "geonames_id": "2643743"
+                }
+              ],
+              "part_of": [
+                {
+                  "type": "volume_group",
+                  "id": "L111322",
+                  "title": "Cast Chinese Coins"
+                }
+              ]
+            }"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key".to_string())
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_publication("L106610").await.unwrap();
+
+        mock.assert();
+        assert_eq!(response.id, "L106610");
+    }
+
+    #[tokio::test]
     async fn get_type_test() {
         let mut server = mockito::Server::new_async().await;
         let url = server.url();
