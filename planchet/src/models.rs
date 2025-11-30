@@ -206,7 +206,7 @@ pub struct CoinSide {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Mint {
-    pub id: i64,
+    pub id: String,
     pub name: String,
 }
 
