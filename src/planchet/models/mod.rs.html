@@ -522,46 +522,23 @@
 <a href=#522 id=522 data-nosnippet>522</a>    <span class="kw">pub </span>user_id: i64,
 <a href=#523 id=523 data-nosnippet>523</a>}
 <a href=#524 id=524 data-nosnippet>524</a>
-<a href=#525 id=525 data-nosnippet>525</a><span class="attr">#[derive(Debug, Clone, Deserialize, Serialize)]
-<a href=#526 id=526 data-nosnippet>526</a></span><span class="kw">pub struct </span>SearchByImageRequest {
-<a href=#527 id=527 data-nosnippet>527</a>    <span class="kw">pub </span>category: <span class="prelude-ty">Option</span>&lt;Category&gt;,
-<a href=#528 id=528 data-nosnippet>528</a>    <span class="kw">pub </span>images: Vec&lt;Image&gt;,
-<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">pub </span>max_results: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#530 id=530 data-nosnippet>530</a>}
-<a href=#531 id=531 data-nosnippet>531</a>
-<a href=#532 id=532 data-nosnippet>532</a><span class="attr">#[derive(Debug, Clone, Deserialize, Serialize)]
-<a href=#533 id=533 data-nosnippet>533</a>#[serde(rename_all = <span class="string">"snake_case"</span>)]
-<a href=#534 id=534 data-nosnippet>534</a></span><span class="kw">pub enum </span>MimeType {
-<a href=#535 id=535 data-nosnippet>535</a>    <span class="attr">#[serde(rename = <span class="string">"image/jpeg"</span>)]
-<a href=#536 id=536 data-nosnippet>536</a>    </span>Jpeg,
-<a href=#537 id=537 data-nosnippet>537</a>    <span class="attr">#[serde(rename = <span class="string">"image/png"</span>)]
-<a href=#538 id=538 data-nosnippet>538</a>    </span>Png,
-<a href=#539 id=539 data-nosnippet>539</a>}
-<a href=#540 id=540 data-nosnippet>540</a>
-<a href=#541 id=541 data-nosnippet>541</a><span class="attr">#[derive(Debug, Clone, Deserialize, Serialize)]
-<a href=#542 id=542 data-nosnippet>542</a></span><span class="kw">pub struct </span>Image {
-<a href=#543 id=543 data-nosnippet>543</a>    <span class="kw">pub </span>mime_type: MimeType,
-<a href=#544 id=544 data-nosnippet>544</a>    <span class="doccomment">/// The image data, Base64-encoded.
-<a href=#545 id=545 data-nosnippet>545</a>    </span><span class="kw">pub </span>image_data: String,
-<a href=#546 id=546 data-nosnippet>546</a>}
-<a href=#547 id=547 data-nosnippet>547</a>
-<a href=#548 id=548 data-nosnippet>548</a><span class="attr">#[derive(Debug, Clone, Deserialize)]
-<a href=#549 id=549 data-nosnippet>549</a></span><span class="kw">pub struct </span>SearchByImageResponse {
-<a href=#550 id=550 data-nosnippet>550</a>    <span class="kw">pub </span>count: i64,
-<a href=#551 id=551 data-nosnippet>551</a>    <span class="kw">pub </span>types: Vec&lt;SearchByImageTypeResult&gt;,
-<a href=#552 id=552 data-nosnippet>552</a>    <span class="kw">pub </span>experimental_tentative_year: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#553 id=553 data-nosnippet>553</a>    <span class="kw">pub </span>experimental_tentative_grade: <span class="prelude-ty">Option</span>&lt;Grade&gt;,
-<a href=#554 id=554 data-nosnippet>554</a>}
-<a href=#555 id=555 data-nosnippet>555</a>
-<a href=#556 id=556 data-nosnippet>556</a><span class="attr">#[derive(Debug, Clone, Deserialize)]
-<a href=#557 id=557 data-nosnippet>557</a></span><span class="kw">pub struct </span>SearchByImageTypeResult {
-<a href=#558 id=558 data-nosnippet>558</a>    <span class="kw">pub </span>id: i64,
-<a href=#559 id=559 data-nosnippet>559</a>    <span class="kw">pub </span>title: String,
-<a href=#560 id=560 data-nosnippet>560</a>    <span class="kw">pub </span>category: <span class="prelude-ty">Option</span>&lt;Category&gt;,
-<a href=#561 id=561 data-nosnippet>561</a>    <span class="kw">pub </span>issuer: <span class="prelude-ty">Option</span>&lt;Issuer&gt;,
-<a href=#562 id=562 data-nosnippet>562</a>    <span class="kw">pub </span>min_year: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#563 id=563 data-nosnippet>563</a>    <span class="kw">pub </span>max_year: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#564 id=564 data-nosnippet>564</a>    <span class="kw">pub </span>obverse_thumbnail: <span class="prelude-ty">Option</span>&lt;Url&gt;,
-<a href=#565 id=565 data-nosnippet>565</a>    <span class="kw">pub </span>reverse_thumbnail: <span class="prelude-ty">Option</span>&lt;Url&gt;,
-<a href=#566 id=566 data-nosnippet>566</a>    <span class="kw">pub </span>similarity_distance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;,
-<a href=#567 id=567 data-nosnippet>567</a>}</code></pre></div></section></main></body></html>
+<a href=#525 id=525 data-nosnippet>525</a><span class="attr">#[derive(Debug, Clone, Deserialize)]
+<a href=#526 id=526 data-nosnippet>526</a></span><span class="kw">pub struct </span>SearchByImageResponse {
+<a href=#527 id=527 data-nosnippet>527</a>    <span class="kw">pub </span>count: i64,
+<a href=#528 id=528 data-nosnippet>528</a>    <span class="kw">pub </span>types: Vec&lt;SearchByImageTypeResult&gt;,
+<a href=#529 id=529 data-nosnippet>529</a>    <span class="kw">pub </span>experimental_tentative_year: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#530 id=530 data-nosnippet>530</a>    <span class="kw">pub </span>experimental_tentative_grade: <span class="prelude-ty">Option</span>&lt;Grade&gt;,
+<a href=#531 id=531 data-nosnippet>531</a>}
+<a href=#532 id=532 data-nosnippet>532</a>
+<a href=#533 id=533 data-nosnippet>533</a><span class="attr">#[derive(Debug, Clone, Deserialize)]
+<a href=#534 id=534 data-nosnippet>534</a></span><span class="kw">pub struct </span>SearchByImageTypeResult {
+<a href=#535 id=535 data-nosnippet>535</a>    <span class="kw">pub </span>id: i64,
+<a href=#536 id=536 data-nosnippet>536</a>    <span class="kw">pub </span>title: String,
+<a href=#537 id=537 data-nosnippet>537</a>    <span class="kw">pub </span>category: <span class="prelude-ty">Option</span>&lt;Category&gt;,
+<a href=#538 id=538 data-nosnippet>538</a>    <span class="kw">pub </span>issuer: <span class="prelude-ty">Option</span>&lt;Issuer&gt;,
+<a href=#539 id=539 data-nosnippet>539</a>    <span class="kw">pub </span>min_year: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#540 id=540 data-nosnippet>540</a>    <span class="kw">pub </span>max_year: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#541 id=541 data-nosnippet>541</a>    <span class="kw">pub </span>obverse_thumbnail: <span class="prelude-ty">Option</span>&lt;Url&gt;,
+<a href=#542 id=542 data-nosnippet>542</a>    <span class="kw">pub </span>reverse_thumbnail: <span class="prelude-ty">Option</span>&lt;Url&gt;,
+<a href=#543 id=543 data-nosnippet>543</a>    <span class="kw">pub </span>similarity_distance: <span class="prelude-ty">Option</span>&lt;Decimal&gt;,
+<a href=#544 id=544 data-nosnippet>544</a>}</code></pre></div></section></main></body></html>

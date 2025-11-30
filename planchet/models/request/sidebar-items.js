@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AddCollectedItem","EditCollectedItem","GetCollectedItemsParams","GradingDetails","ItemPrice","OAuthTokenParams","SearchTypesParams"]};
+window.SIDEBAR_ITEMS = {"enum":["MimeType"],"struct":["AddCollectedItemParams","EditCollectedItemParams","GetCollectedItemsParams","GradingDetailsParams","Image","ItemPriceParams","OAuthTokenParams","SearchByImageRequest","SearchTypesParams"]};
