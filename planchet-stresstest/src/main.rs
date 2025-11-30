@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         client_id: None,
         client_secret: None,
         redirect_uri: None,
-        scope: None,
+        scope: Some("view_collection".to_string()),
     };
     let token = pre_auth_client.get_oauth_token(&params).await?;
 
