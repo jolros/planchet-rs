@@ -1155,6 +1155,7 @@ mod tests {
           .match_query(mockito::Matcher::AllOf(vec![
             mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
             mockito::Matcher::UrlEncoded("lang".into(), "es".into()),
+            mockito::Matcher::UrlEncoded("category".into(), "coin".into()),
           ]))
           .with_status(200)
           .with_header("content-type", "application/json")
@@ -1182,7 +1183,10 @@ mod tests {
             .build()
             .unwrap();
 
-        let params = SearchTypesParams::new().q("victoria").lang(Language::from_639_1("es").unwrap());
+        let params = SearchTypesParams::new()
+            .q("victoria")
+            .lang(Language::from_639_1("es").unwrap())
+            .category(Category::Coin);
         let response = client.search_types(&params).await.unwrap();
 
         mock.assert();
