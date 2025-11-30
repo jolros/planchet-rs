@@ -1,7 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
 use planchet::{
-    models::GrantType, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams, SearchTypesParams,
+    models::{GrantType, OAuthTokenParams, SearchTypesParams, GetCollectedItemsParams},
+    ClientBuilder,
 };
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;

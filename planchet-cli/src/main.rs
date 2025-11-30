@@ -69,8 +69,11 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use futures::stream::TryStreamExt;
 use planchet::{
-    models::{CollectedItem, GrantType, SearchTypeResult},
-    Client, ClientBuilder, GetCollectedItemsParams, OAuthTokenParams, SearchTypesParams,
+    models::{
+        CollectedItem, GetCollectedItemsParams, GrantType, OAuthTokenParams, SearchTypeResult,
+        SearchTypesParams,
+    },
+    Client, ClientBuilder,
 };
 use std::collections::HashMap;
 use std::env;

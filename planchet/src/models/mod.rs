@@ -8,6 +8,9 @@ use url::Url;
 pub mod request;
 pub mod response;
 
+pub use request::*;
+pub use response::*;
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Orientation {

@@ -5,7 +5,8 @@
 //! ## Basic Search
 //!
 //! ```no_run
-//! use planchet::{ClientBuilder, SearchTypesParams};
+//! use planchet::models::SearchTypesParams;
+//! use planchet::ClientBuilder;
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -27,7 +28,8 @@
 //! for a search and how to handle specific API errors.
 //!
 //! ```no_run
-//! use planchet::{ClientBuilder, Error, SearchTypesParams};
+//! use planchet::models::SearchTypesParams;
+//! use planchet::{ClientBuilder, Error};
 //! use futures::stream::TryStreamExt;
 //!
 //! #[tokio::main]
@@ -64,16 +66,3 @@ pub mod models;
 // Re-export public API
 pub use client::{Client, ClientBuilder};
 pub use error::{ApiError, Error, KnownApiError, Result};
-pub use models::request::{
-    AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, GradingDetailsParams,
-    Image, ItemPriceParams, MimeType, OAuthTokenParams, SearchByImageParams, SearchTypesParams,
-};
-pub use models::response::{
-    CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse, SearchByImageResponse,
-    SearchTypesResponse,
-};
-pub use models::{
-    Category, CollectedItem, CollectedItems, Grade, GradePrices, GradingDetails,
-    GradingDetails as GradingDetailsResponse, ItemPrice, ItemPrice as ItemPriceResponse,
-    MintDetail, NumistaType, OAuthToken, Publication, User,
-};
