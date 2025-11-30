@@ -251,17 +251,21 @@ impl Middleware for LoggingMiddleware {
     }
 }
 
-macro_rules! add_lang_param {
-    ($req:expr, $lang:expr) => {
-        if let Some(l) = $lang {
-            $req.query(&[("lang", l.to_639_1())])
-        } else {
-            $req
-        }
-    };
-}
-
 impl Client {
+    async fn get_request<T, Q>(&self, path: &str, query: Option<&Q>) -> Result<T>
+    where
+        T: DeserializeOwned,
+        Q: Serialize + ?Sized,
+    {
+        let url = format!("{}{}", self.base_url, path);
+        let mut req = self.client.get(&url);
+        if let Some(q) = query {
+            req = req.query(q);
+        }
+        let response = req.send().await?;
+        process_response(response).await
+    }
+
     /// Gets a single type from the Numista catalogue.
     ///
     /// # Arguments
@@ -273,11 +277,9 @@ impl Client {
         type_id: i64,
         lang: Option<Language>,
     ) -> Result<NumistaType> {
-        let url = format!("{}/types/{}", self.base_url, type_id);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request(&format!("/types/{}", type_id), query.as_ref())
+            .await
     }
 
     /// Gets the issues of a type.
@@ -291,11 +293,9 @@ impl Client {
         type_id: i64,
         lang: Option<Language>,
     ) -> Result<Vec<models::Issue>> {
-        let url = format!("{}/types/{}/issues", self.base_url, type_id);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request(&format!("/types/{}/issues", type_id), query.as_ref())
+            .await
     }
 
     /// Gets the prices for an issue.
@@ -318,19 +318,17 @@ impl Client {
             lang: Option<&'a str>,
         }
 
-        let url = format!(
-            "{}/types/{}/issues/{}/prices",
-            self.base_url, type_id, issue_id
-        );
-
         let lang_str = lang.and_then(|l| l.to_639_1());
         let params = GetPricesParams {
             currency,
             lang: lang_str,
         };
 
-        let response = self.client.get(&url).query(&params).send().await?;
-        process_response(response).await
+        self.get_request(
+            &format!("/types/{}/issues/{}/prices", type_id, issue_id),
+            Some(&params),
+        )
+        .await
     }
 
     /// Searches for types in the Numista catalogue.
@@ -342,13 +340,7 @@ impl Client {
         &self,
         params: &SearchTypesParams<'_>,
     ) -> Result<SearchTypesResponse> {
-        let response = self
-            .client
-            .get(&format!("{}/types", self.base_url))
-            .query(params)
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request("/types", Some(params)).await
     }
 
     /// Returns a stream of all types matching the search parameters.
@@ -437,11 +429,8 @@ impl Client {
     ///
     /// * `lang` - The language to use for the response.
     pub async fn get_issuers(&self, lang: Option<Language>) -> Result<IssuersResponse> {
-        let url = format!("{}/issuers", self.base_url);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request("/issuers", query.as_ref()).await
     }
 
     /// Gets the list of mints.
@@ -450,11 +439,8 @@ impl Client {
     ///
     /// * `lang` - The language to use for the response.
     pub async fn get_mints(&self, lang: Option<Language>) -> Result<MintsResponse> {
-        let url = format!("{}/mints", self.base_url);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request("/mints", query.as_ref()).await
     }
 
     /// Gets a single mint.
@@ -464,21 +450,14 @@ impl Client {
     /// * `mint_id` - The ID of the mint to get.
     /// * `lang` - The language to use for the response.
     pub async fn get_mint(&self, mint_id: i64, lang: Option<Language>) -> Result<MintDetail> {
-        let url = format!("{}/mints/{}", self.base_url, mint_id);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request(&format!("/mints/{}", mint_id), query.as_ref())
+            .await
     }
 
     /// Gets the list of catalogues.
     pub async fn get_catalogues(&self) -> Result<CataloguesResponse> {
-        let response = self
-            .client
-            .get(&format!("{}/catalogues", self.base_url))
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request("/catalogues", None::<&()>).await
     }
 
     /// Gets a single publication.
@@ -487,12 +466,8 @@ impl Client {
     ///
     /// * `id` - The ID of the publication to get.
     pub async fn get_publication(&self, id: &str) -> Result<Publication> {
-        let response = self
-            .client
-            .get(&format!("{}/publications/{}", self.base_url, id))
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request(&format!("/publications/{}", id), None::<&()>)
+            .await
     }
 
     /// Gets a user.
@@ -502,11 +477,9 @@ impl Client {
     /// * `user_id` - The ID of the user to get.
     /// * `lang` - The language to use for the response.
     pub async fn get_user(&self, user_id: i64, lang: Option<Language>) -> Result<User> {
-        let url = format!("{}/users/{}", self.base_url, user_id);
-        let req = self.client.get(&url);
-        let req = add_lang_param!(req, lang);
-        let response = req.send().await?;
-        process_response(response).await
+        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
+        self.get_request(&format!("/users/{}", user_id), query.as_ref())
+            .await
     }
 
     /// Gets the collections of a user.
@@ -515,12 +488,8 @@ impl Client {
     ///
     /// * `user_id` - The ID of the user to get the collections for.
     pub async fn get_user_collections(&self, user_id: i64) -> Result<CollectionsResponse> {
-        let response = self
-            .client
-            .get(&format!("{}/users/{}/collections", self.base_url, user_id))
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request(&format!("/users/{}/collections", user_id), None::<&()>)
+            .await
     }
 
     /// Gets the collected items of a user.
@@ -534,16 +503,11 @@ impl Client {
         user_id: i64,
         params: &GetCollectedItemsParams,
     ) -> Result<CollectedItemsResponse> {
-        let response = self
-            .client
-            .get(&format!(
-                "{}/users/{}/collected_items",
-                self.base_url, user_id
-            ))
-            .query(params)
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request(
+            &format!("/users/{}/collected_items", user_id),
+            Some(params),
+        )
+        .await
     }
 
     /// Adds a collected item to a user's collection.
@@ -577,15 +541,11 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to get.
     pub async fn get_collected_item(&self, user_id: i64, item_id: i64) -> Result<CollectedItem> {
-        let response = self
-            .client
-            .get(&format!(
-                "{}/users/{}/collected_items/{}",
-                self.base_url, user_id, item_id
-            ))
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request(
+            &format!("/users/{}/collected_items/{}", user_id, item_id),
+            None::<&()>,
+        )
+        .await
     }
 
     /// Edits a collected item in a user's collection.
@@ -643,13 +603,7 @@ impl Client {
     ///
     /// * `params` - The parameters for getting the token.
     pub async fn get_oauth_token(&self, params: &OAuthTokenParams) -> Result<OAuthToken> {
-        let response = self
-            .client
-            .get(&format!("{}/oauth_token", self.base_url))
-            .query(params)
-            .send()
-            .await?;
-        process_response(response).await
+        self.get_request("/oauth_token", Some(params)).await
     }
 
     /// Searches for types by image.
