@@ -522,29 +522,6 @@ pub struct OAuthToken {
     pub user_id: i64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SearchByImageRequest {
-    pub category: Option<Category>,
-    pub images: Vec<Image>,
-    pub max_results: Option<i64>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MimeType {
-    #[serde(rename = "image/jpeg")]
-    Jpeg,
-    #[serde(rename = "image/png")]
-    Png,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Image {
-    pub mime_type: MimeType,
-    /// The image data, Base64-encoded.
-    pub image_data: String,
-}
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct SearchByImageResponse {
     pub count: i64,
