@@ -1,7 +1,7 @@
 use planchet::{
     AddCollectedItemParams, Category, ClientBuilder, EditCollectedItemParams, Error,
-    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchTypesParams,
-    models::{self, GrantType, Orientation},
+    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchByImageRequest,
+    SearchTypesParams, models::{self, GrantType, Orientation},
 };
 use futures::StreamExt;
 use rust_decimal::Decimal;
@@ -801,7 +801,7 @@ async fn search_by_image_test() {
         .build()
         .unwrap();
 
-    let request = models::request::SearchByImageRequest {
+    let request = SearchByImageRequest {
         category: None,
         images: vec![
             models::request::Image {
