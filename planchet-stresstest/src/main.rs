@@ -6,7 +6,7 @@ use planchet::{
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
-/// A manuel tool for verifying the deserialization of all read-only API responses.
+/// A manual tool for verifying the deserialization of all read-only API responses.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
