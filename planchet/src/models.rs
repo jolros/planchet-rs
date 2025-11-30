@@ -357,6 +357,7 @@ pub struct Publication {
     pub translated_subtitle: Option<String>,
     pub edition: Option<String>,
     pub languages: Vec<Language>,
+    #[serde(deserialize_with = "crate::de::de_optional_i32_from_str", default)]
     pub year: Option<i32>,
     pub page_count: Option<i64>,
     pub pages: Option<String>,
@@ -379,12 +380,14 @@ pub struct Publication {
 pub struct Contributor {
     pub role: String,
     pub name: String,
+    #[serde(deserialize_with = "crate::de::de_optional_i64_from_str_or_int", default)]
     pub id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Publisher {
     pub name: String,
+    #[serde(deserialize_with = "crate::de::de_optional_i64_from_str_or_int", default)]
     pub id: Option<i64>,
 }
 
