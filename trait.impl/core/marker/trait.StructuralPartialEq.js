@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["planchet",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/models/enum.Category.html\" title=\"enum planchet::models::Category\">Category</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/models/enum.Grade.html\" title=\"enum planchet::models::Grade\">Grade</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/models/enum.Orientation.html\" title=\"enum planchet::models::Orientation\">Orientation</a>"]]]]);
+    var implementors = Object.fromEntries([["planchet",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/model/enum.Category.html\" title=\"enum planchet::model::Category\">Category</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/model/enum.Grade.html\" title=\"enum planchet::model::Grade\">Grade</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/marker/trait.StructuralPartialEq.html\" title=\"trait core::marker::StructuralPartialEq\">StructuralPartialEq</a> for <a class=\"enum\" href=\"planchet/model/enum.Orientation.html\" title=\"enum planchet::model::Orientation\">Orientation</a>"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[938]}
+//{"start":57,"fragment_lengths":[932]}

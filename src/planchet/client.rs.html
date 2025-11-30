@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `planchet/src/client.rs`."><title>client.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="planchet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.1 (ed61e7d7e 2025-11-07)" data-channel="1.91.1" data-search-js="search-e256b49e.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">planchet/</div>client.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::error::{ApiError, Error, <span class="prelude-ty">Result</span>};
-<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::models::{
+<a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::model::{
 <a href=#3 id=3 data-nosnippet>3</a>    <span class="self">self</span>,
 <a href=#4 id=4 data-nosnippet>4</a>    request::{
 <a href=#5 id=5 data-nosnippet>5</a>        AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
@@ -162,7 +162,7 @@
 <a href=#162 id=162 data-nosnippet>162</a>    /// # Arguments
 <a href=#163 id=163 data-nosnippet>163</a>    ///
 <a href=#164 id=164 data-nosnippet>164</a>    /// * `type_id` - The ID of the type to get the issues for.
-<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">pub async fn </span>get_issues(<span class="kw-2">&amp;</span><span class="self">self</span>, type_id: i64) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;models::Issue&gt;&gt; {
+<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">pub async fn </span>get_issues(<span class="kw-2">&amp;</span><span class="self">self</span>, type_id: i64) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;model::Issue&gt;&gt; {
 <a href=#166 id=166 data-nosnippet>166</a>        <span class="self">self</span>.get_request(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"/types/{}/issues"</span>, type_id), <span class="prelude-val">None</span>::&lt;<span class="kw-2">&amp;</span>()&gt;)
 <a href=#167 id=167 data-nosnippet>167</a>            .<span class="kw">await
 <a href=#168 id=168 data-nosnippet>168</a>    </span>}
@@ -216,12 +216,12 @@
 <a href=#216 id=216 data-nosnippet>216</a>    </span><span class="kw">pub fn </span>stream_all_types&lt;<span class="lifetime">'a</span>&gt;(
 <a href=#217 id=217 data-nosnippet>217</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
 <a href=#218 id=218 data-nosnippet>218</a>        params: SearchTypesParams,
-<a href=#219 id=219 data-nosnippet>219</a>    ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="prelude-ty">Result</span>&lt;models::SearchTypeResult&gt;&gt; + <span class="lifetime">'a </span>{
+<a href=#219 id=219 data-nosnippet>219</a>    ) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="prelude-ty">Result</span>&lt;model::SearchTypeResult&gt;&gt; + <span class="lifetime">'a </span>{
 <a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">struct </span>State {
 <a href=#221 id=221 data-nosnippet>221</a>            client: Client,
 <a href=#222 id=222 data-nosnippet>222</a>            params: SearchTypesParams,
 <a href=#223 id=223 data-nosnippet>223</a>            current_page: i64,
-<a href=#224 id=224 data-nosnippet>224</a>            buffer: std::vec::IntoIter&lt;models::SearchTypeResult&gt;,
+<a href=#224 id=224 data-nosnippet>224</a>            buffer: std::vec::IntoIter&lt;model::SearchTypeResult&gt;,
 <a href=#225 id=225 data-nosnippet>225</a>            items_fetched: i64,
 <a href=#226 id=226 data-nosnippet>226</a>            total_items: <span class="prelude-ty">Option</span>&lt;i64&gt;,
 <a href=#227 id=227 data-nosnippet>227</a>        }
