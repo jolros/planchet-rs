@@ -58,15 +58,15 @@ async fn main() -> Result<()> {
     println!("Successfully authenticated!");
 
     println!("Calling get_issuers()");
-    let issuers = client.get_issuers(None).await?;
+    let issuers = client.get_issuers().await?;
     println!("{:#?}", issuers);
 
     println!("Calling get_mints()");
-    let mints = client.get_mints(None).await?;
+    let mints = client.get_mints().await?;
     println!("{:#?}", mints);
     if let Some(mint) = mints.mints.first() {
         println!("Calling get_mint()");
-        println!("{:#?}", client.get_mint(mint.id, None).await?);
+        println!("{:#?}", client.get_mint(mint.id).await?);
     }
 
     println!("Calling get_catalogues()");
@@ -89,11 +89,11 @@ async fn main() -> Result<()> {
             client.get_collected_item(cli.user_id, item.id).await?
         );
         println!("Calling get_type()");
-        let r#type = client.get_type(item.type_info.id, None).await?;
+        let r#type = client.get_type(item.type_info.id).await?;
         println!("{:#?}", r#type);
 
         println!("Calling get_issues()");
-        let issues = client.get_issues(item.type_info.id, None).await?;
+        let issues = client.get_issues(item.type_info.id).await?;
         println!("{:#?}", issues);
 
         if let Some(issue) = &item.issue {
@@ -101,14 +101,14 @@ async fn main() -> Result<()> {
             println!(
                 "{:#?}",
                 client
-                    .get_prices(item.type_info.id, issue.id, None, None)
+                    .get_prices(item.type_info.id, issue.id, None)
                     .await?
             );
         }
     }
 
     println!("Calling get_user()");
-    println!("{:#?}", client.get_user(cli.user_id, None).await?);
+    println!("{:#?}", client.get_user(cli.user_id).await?);
     println!("Calling get_publication()");
     println!("{:#?}", client.get_publication("L106610").await?);
     println!("Calling search_types()");
