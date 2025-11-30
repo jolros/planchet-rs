@@ -4,11 +4,19 @@
 //!
 //! # Usage
 //!
-//! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
-//!
 //! ```bash
-//! planchet-cli --api-key <YOUR_API_KEY> <COMMAND> <COMMAND_ARGS>
+//! planchet-cli --api-key <YOUR_API_KEY> [--lang <LANG>] <COMMAND> <COMMAND_ARGS>
 //! ```
+//!
+//! # Common Arguments
+//!
+//! ## `--api-key`
+//!
+//! The Numista API key. This argument is mandatory, but can be omitted if the `NUMISTA_API_KEY` environment variable is set.
+//!
+//! ## `--lang`
+//!
+//! The language to use for the API response (2-letter ISO code). This argument is optional.
 //!
 //! # Commands
 //!
@@ -72,10 +80,17 @@ use tabled::{Table, Tabled};
 mod display;
 
 // Client creation helper
-fn build_client(api_key: String, bearer_token: Option<String>) -> Result<Client> {
+fn build_client(
+    api_key: String,
+    bearer_token: Option<String>,
+    lang: Option<String>,
+) -> Result<Client> {
     let mut client_builder = ClientBuilder::new().api_key(api_key);
     if let Some(token) = bearer_token {
         client_builder = client_builder.bearer_token(token);
+    }
+    if let Some(l) = lang {
+        client_builder = client_builder.lang_code(l);
     }
     if let Ok(url) = env::var("NUMISTA_API_URL") {
         client_builder = client_builder.base_url(url);
@@ -83,8 +98,12 @@ fn build_client(api_key: String, bearer_token: Option<String>) -> Result<Client>
     Ok(client_builder.build()?)
 }
 
-async fn fetch_collection(api_key: String, user_id: i64) -> Result<Vec<CollectedItem>> {
-    let client = build_client(api_key.clone(), None)?;
+async fn fetch_collection(
+    api_key: String,
+    user_id: i64,
+    lang: Option<String>,
+) -> Result<Vec<CollectedItem>> {
+    let client = build_client(api_key.clone(), None, lang.clone())?;
     let token_params = OAuthTokenParams {
         grant_type: GrantType::ClientCredentials,
         client_id: None,
@@ -94,7 +113,7 @@ async fn fetch_collection(api_key: String, user_id: i64) -> Result<Vec<Collected
         scope: Some("view_collection".to_string()),
     };
     let token = client.get_oauth_token(&token_params).await?;
-    let client = build_client(api_key, Some(token.access_token))?;
+    let client = build_client(api_key, Some(token.access_token), lang)?;
 
     let params = GetCollectedItemsParams::new();
     let response = client.get_collected_items(user_id, &params).await?;
@@ -109,12 +128,26 @@ struct Cli {
     #[arg(short, long, env = "NUMISTA_API_KEY")]
     api_key: String,
 
+    /// The language for the API response (2-letter ISO code).
+    #[arg(long, global = true, value_parser = parse_lang)]
+    lang: Option<String>,
+
     /// Enable debug logging.
     #[arg(long, global = true)]
     debug: bool,
 
     #[command(subcommand)]
     command: Commands,
+}
+
+fn parse_lang(s: &str) -> Result<String, String> {
+    if s.len() != 2 {
+        return Err("Language code must be exactly 2 characters".to_string());
+    }
+    if !s.chars().all(|c| c.is_ascii_alphabetic()) {
+        return Err("Language code must contain only letters".to_string());
+    }
+    Ok(s.to_string())
 }
 
 #[derive(Subcommand)]
@@ -224,8 +257,8 @@ fn get_gregorian_year(item: &CollectedItem) -> Option<i32> {
 }
 
 // Command handlers
-async fn dump_collection(api_key: String, user_id: i64) -> Result<()> {
-    let mut items = fetch_collection(api_key, user_id).await?;
+async fn dump_collection(api_key: String, user_id: i64, lang: Option<String>) -> Result<()> {
+    let mut items = fetch_collection(api_key, user_id, lang).await?;
 
     items.sort_by(|a, b| {
         let a_issuer = get_issuer_name(a);
@@ -256,8 +289,8 @@ async fn dump_collection(api_key: String, user_id: i64) -> Result<()> {
     Ok(())
 }
 
-async fn summarize_collection(api_key: String, user_id: i64) -> Result<()> {
-    let items = fetch_collection(api_key, user_id).await?;
+async fn summarize_collection(api_key: String, user_id: i64, lang: Option<String>) -> Result<()> {
+    let items = fetch_collection(api_key, user_id, lang).await?;
 
     let mut by_issuer: HashMap<String, Vec<CollectedItem>> = HashMap::new();
     for item in items {
@@ -307,8 +340,14 @@ fn print_search_header(count: i64, query: &str, year: Option<i32>) {
     println!("Found {} results for {}.", count, search_details);
 }
 
-async fn search_types(api_key: String, query: String, year: Option<i32>, all: bool) -> Result<()> {
-    let client = build_client(api_key, None)?;
+async fn search_types(
+    api_key: String,
+    query: String,
+    year: Option<i32>,
+    all: bool,
+    lang: Option<String>,
+) -> Result<()> {
+    let client = build_client(api_key, None, lang)?;
     let mut params = SearchTypesParams::new().q(&query);
     if let Some(y) = year {
         params = params.date(y);
@@ -368,9 +407,9 @@ async fn search_types(api_key: String, query: String, year: Option<i32>, all: bo
     Ok(())
 }
 
-async fn get_type(api_key: String, id: i64) -> Result<()> {
-    let client = build_client(api_key, None)?;
-    let type_ = client.get_type(id, None).await?;
+async fn get_type(api_key: String, id: i64, lang: Option<String>) -> Result<()> {
+    let client = build_client(api_key, None, lang)?;
+    let type_ = client.get_type(id).await?;
     display::print_numista_type(Some(&type_), 0);
     Ok(())
 }
@@ -396,12 +435,14 @@ async fn main() -> Result<()> {
         .init();
 
     match cli.command {
-        Commands::Dump { user_id } => dump_collection(cli.api_key, user_id).await?,
-        Commands::Summarize { user_id } => summarize_collection(cli.api_key, user_id).await?,
-        Commands::Types { query, year, all } => {
-            search_types(cli.api_key, query, year, all).await?
+        Commands::Dump { user_id } => dump_collection(cli.api_key, user_id, cli.lang).await?,
+        Commands::Summarize { user_id } => {
+            summarize_collection(cli.api_key, user_id, cli.lang).await?
         }
-        Commands::Type { id } => get_type(cli.api_key, id).await?,
+        Commands::Types { query, year, all } => {
+            search_types(cli.api_key, query, year, all, cli.lang).await?
+        }
+        Commands::Type { id } => get_type(cli.api_key, id, cli.lang).await?,
     }
 
     Ok(())

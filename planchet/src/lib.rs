@@ -69,7 +69,7 @@ use models::{
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest_middleware::{ClientBuilder as MiddlewareClientBuilder, ClientWithMiddleware, Middleware, Next};
 use http::Extensions;
-use serde::{de::DeserializeOwned, Serialize, Serializer};
+use serde::{de::DeserializeOwned, Serialize};
 use std::borrow::Cow;
 use std::fmt;
 use tracing::{info_span, trace, Instrument};
@@ -149,6 +149,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Client {
     client: ClientWithMiddleware,
     base_url: String,
+    lang: Option<String>,
 }
 
 async fn parse_api_error(response: reqwest::Response) -> Error {
@@ -251,6 +252,14 @@ impl Middleware for LoggingMiddleware {
     }
 }
 
+macro_rules! add_lang_param {
+    ($self:expr, $req:expr) => {
+        if let Some(ref l) = $self.lang {
+            $req = $req.query(&[("lang", l)]);
+        }
+    };
+}
+
 impl Client {
     async fn get_request<T, Q>(&self, path: &str, query: Option<&Q>) -> Result<T>
     where
@@ -259,6 +268,7 @@ impl Client {
     {
         let url = format!("{}{}", self.base_url, path);
         let mut req = self.client.get(&url);
+        add_lang_param!(self, req);
         if let Some(q) = query {
             req = req.query(q);
         }
@@ -271,14 +281,8 @@ impl Client {
     /// # Arguments
     ///
     /// * `type_id` - The ID of the type to get.
-    /// * `lang` - The language to use for the response.
-    pub async fn get_type(
-        &self,
-        type_id: i64,
-        lang: Option<Language>,
-    ) -> Result<NumistaType> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request(&format!("/types/{}", type_id), query.as_ref())
+    pub async fn get_type(&self, type_id: i64) -> Result<NumistaType> {
+        self.get_request(&format!("/types/{}", type_id), None::<&()>)
             .await
     }
 
@@ -287,14 +291,8 @@ impl Client {
     /// # Arguments
     ///
     /// * `type_id` - The ID of the type to get the issues for.
-    /// * `lang` - The language to use for the response.
-    pub async fn get_issues(
-        &self,
-        type_id: i64,
-        lang: Option<Language>,
-    ) -> Result<Vec<models::Issue>> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request(&format!("/types/{}/issues", type_id), query.as_ref())
+    pub async fn get_issues(&self, type_id: i64) -> Result<Vec<models::Issue>> {
+        self.get_request(&format!("/types/{}/issues", type_id), None::<&()>)
             .await
     }
 
@@ -310,19 +308,13 @@ impl Client {
         type_id: i64,
         issue_id: i64,
         currency: Option<&str>,
-        lang: Option<Language>,
     ) -> Result<PricesResponse> {
         #[derive(Serialize)]
         struct GetPricesParams<'a> {
             currency: Option<&'a str>,
-            lang: Option<&'a str>,
         }
 
-        let lang_str = lang.and_then(|l| l.to_639_1());
-        let params = GetPricesParams {
-            currency,
-            lang: lang_str,
-        };
+        let params = GetPricesParams { currency };
 
         self.get_request(
             &format!("/types/{}/issues/{}/prices", type_id, issue_id),
@@ -424,23 +416,13 @@ impl Client {
     }
 
     /// Gets the list of issuers.
-    ///
-    /// # Arguments
-    ///
-    /// * `lang` - The language to use for the response.
-    pub async fn get_issuers(&self, lang: Option<Language>) -> Result<IssuersResponse> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request("/issuers", query.as_ref()).await
+    pub async fn get_issuers(&self) -> Result<IssuersResponse> {
+        self.get_request("/issuers", None::<&()>).await
     }
 
     /// Gets the list of mints.
-    ///
-    /// # Arguments
-    ///
-    /// * `lang` - The language to use for the response.
-    pub async fn get_mints(&self, lang: Option<Language>) -> Result<MintsResponse> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request("/mints", query.as_ref()).await
+    pub async fn get_mints(&self) -> Result<MintsResponse> {
+        self.get_request("/mints", None::<&()>).await
     }
 
     /// Gets a single mint.
@@ -448,10 +430,8 @@ impl Client {
     /// # Arguments
     ///
     /// * `mint_id` - The ID of the mint to get.
-    /// * `lang` - The language to use for the response.
-    pub async fn get_mint(&self, mint_id: i64, lang: Option<Language>) -> Result<MintDetail> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request(&format!("/mints/{}", mint_id), query.as_ref())
+    pub async fn get_mint(&self, mint_id: i64) -> Result<MintDetail> {
+        self.get_request(&format!("/mints/{}", mint_id), None::<&()>)
             .await
     }
 
@@ -475,10 +455,8 @@ impl Client {
     /// # Arguments
     ///
     /// * `user_id` - The ID of the user to get.
-    /// * `lang` - The language to use for the response.
-    pub async fn get_user(&self, user_id: i64, lang: Option<Language>) -> Result<User> {
-        let query = lang.and_then(|l| l.to_639_1()).map(|l| [("lang", l)]);
-        self.get_request(&format!("/users/{}", user_id), query.as_ref())
+    pub async fn get_user(&self, user_id: i64) -> Result<User> {
+        self.get_request(&format!("/users/{}", user_id), None::<&()>)
             .await
     }
 
@@ -521,12 +499,10 @@ impl Client {
         user_id: i64,
         item: &AddCollectedItem,
     ) -> Result<CollectedItem> {
-        let response = self
-            .client
-            .post(&format!(
-                "{}/users/{}/collected_items",
-                self.base_url, user_id
-            ))
+        let url = format!("{}/users/{}/collected_items", self.base_url, user_id);
+        let mut req = self.client.post(&url);
+        add_lang_param!(self, req);
+        let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
             .send()
@@ -561,12 +537,13 @@ impl Client {
         item_id: i64,
         item: &EditCollectedItem,
     ) -> Result<CollectedItem> {
-        let response = self
-            .client
-            .patch(&format!(
-                "{}/users/{}/collected_items/{}",
-                self.base_url, user_id, item_id
-            ))
+        let url = format!(
+            "{}/users/{}/collected_items/{}",
+            self.base_url, user_id, item_id
+        );
+        let mut req = self.client.patch(&url);
+        add_lang_param!(self, req);
+        let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
             .send()
@@ -581,14 +558,13 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to delete.
     pub async fn delete_collected_item(&self, user_id: i64, item_id: i64) -> Result<()> {
-        let response = self
-            .client
-            .delete(&format!(
-                "{}/users/{}/collected_items/{}",
-                self.base_url, user_id, item_id
-            ))
-            .send()
-            .await?;
+        let url = format!(
+            "{}/users/{}/collected_items/{}",
+            self.base_url, user_id, item_id
+        );
+        let mut req = self.client.delete(&url);
+        add_lang_param!(self, req);
+        let response = req.send().await?;
 
         if response.status().is_success() {
             return Ok(());
@@ -615,9 +591,10 @@ impl Client {
         &self,
         request: &models::SearchByImageRequest,
     ) -> Result<SearchByImageResponse> {
-        let response = self
-            .client
-            .post(&format!("{}/search_by_image", self.base_url))
+        let url = format!("{}/search_by_image", self.base_url);
+        let mut req = self.client.post(&url);
+        add_lang_param!(self, req);
+        let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(request)?)
             .send()
@@ -737,6 +714,7 @@ pub struct ClientBuilder<'a> {
     api_key: Option<Cow<'a, str>>,
     base_url: Option<Cow<'a, str>>,
     bearer_token: Option<Cow<'a, str>>,
+    lang: Option<Language>,
 }
 
 impl<'a> ClientBuilder<'a> {
@@ -762,6 +740,20 @@ impl<'a> ClientBuilder<'a> {
     /// Sets the bearer token to use for requests.
     pub fn bearer_token<S: Into<Cow<'a, str>>>(mut self, bearer_token: S) -> Self {
         self.bearer_token = Some(bearer_token.into());
+        self
+    }
+
+    /// Sets the language to use for requests.
+    pub fn lang(mut self, lang: Language) -> Self {
+        self.lang = Some(lang);
+        self
+    }
+
+    /// Sets the language code to use for requests.
+    pub fn lang_code<S: Into<Cow<'a, str>>>(mut self, lang_code: S) -> Self {
+        if let Some(l) = Language::from_639_1(&lang_code.into().to_lowercase()) {
+            self.lang = Some(l);
+        }
         self
     }
 
@@ -796,26 +788,19 @@ impl<'a> ClientBuilder<'a> {
             .map(|s| s.into_owned())
             .unwrap_or_else(|| "https://api.numista.com/v3".to_string());
 
-        Ok(Client { client, base_url })
-    }
-}
+        let lang = self.lang.and_then(|l| l.to_639_1().map(|s| s.to_string()));
 
-fn serialize_lang<S>(lang: &Option<Language>, serializer: S) -> std::result::Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    if let Some(l) = lang {
-        serializer.serialize_some(l.to_639_1().unwrap())
-    } else {
-        serializer.serialize_none()
+        Ok(Client {
+            client,
+            base_url,
+            lang,
+        })
     }
 }
 
 /// Parameters for searching for types.
 #[derive(Debug, Default, Serialize, Clone)]
 pub struct SearchTypesParams<'a> {
-    #[serde(serialize_with = "serialize_lang")]
-    lang: Option<Language>,
     category: Option<Category>,
     q: Option<Cow<'a, str>>,
     issuer: Option<Cow<'a, str>>,
@@ -835,12 +820,6 @@ impl<'a> SearchTypesParams<'a> {
     /// Creates a new `SearchTypesParams`.
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Sets the language to use for the search.
-    pub fn lang(mut self, lang: Language) -> Self {
-        self.lang = Some(lang);
-        self
     }
 
     /// Sets the category to search in.
@@ -1055,10 +1034,11 @@ mod tests {
         let client = ClientBuilder::new()
             .api_key("test_key".to_string())
             .base_url(url)
+            .lang_code("de")
             .build()
             .unwrap();
 
-        let response = client.get_type(420, Some(Language::from_639_1("de").unwrap())).await.unwrap();
+        let response = client.get_type(420).await.unwrap();
 
         mock.assert();
         assert_eq!(response.id, 420);
@@ -1086,7 +1066,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(99700, None).await.unwrap();
+        let response = client.get_type(99700).await.unwrap();
 
         mock.assert();
         assert_eq!(response.id, 99700);
@@ -1200,12 +1180,12 @@ mod tests {
         let client = ClientBuilder::new()
             .api_key("test_key".to_string())
             .base_url(url)
+            .lang_code("es")
             .build()
             .unwrap();
 
         let params = SearchTypesParams::new()
             .q("victoria")
-            .lang(Language::from_639_1("es").unwrap())
             .category(Category::Coin);
         let response = client.search_types(&params).await.unwrap();
 
@@ -1322,7 +1302,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_issues(420, None).await.unwrap();
+        let response = client.get_issues(420).await.unwrap();
 
         mock.assert();
         assert_eq!(response.len(), 1);
@@ -1346,7 +1326,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_prices(420, 123, None, None).await.unwrap();
+        let response = client.get_prices(420, 123, None).await.unwrap();
 
         mock.assert();
         assert_eq!(response.currency, iso_currency::Currency::USD);
@@ -1369,7 +1349,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_issuers(None).await.unwrap();
+        let response = client.get_issuers().await.unwrap();
 
         mock.assert();
         assert_eq!(response.count, 1);
@@ -1394,7 +1374,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_mints(None).await.unwrap();
+        let response = client.get_mints().await.unwrap();
 
         mock.assert();
         assert_eq!(response.count, 1);
@@ -1419,7 +1399,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_mint(1, None).await.unwrap();
+        let response = client.get_mint(1).await.unwrap();
 
         mock.assert();
         assert_eq!(response.id, 1);
@@ -1490,7 +1470,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_user(1, None).await.unwrap();
+        let response = client.get_user(1).await.unwrap();
 
         mock.assert();
         assert_eq!(response.username, "test");
@@ -1777,7 +1757,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(420, None).await;
+        let response = client.get_type(420).await;
 
         mock.assert();
         assert!(response.is_err());
@@ -1808,7 +1788,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(999999, None).await;
+        let response = client.get_type(999999).await;
 
         mock.assert();
         assert!(response.is_err());
@@ -1873,7 +1853,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(123, None).await;
+        let response = client.get_type(123).await;
 
         mock.assert();
         assert!(response.is_err());
@@ -1947,7 +1927,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let response = client.get_type(420, None).await;
+        let response = client.get_type(420).await;
 
         mock.assert();
         assert!(response.is_err());
