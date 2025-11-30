@@ -472,14 +472,16 @@ async fn api_error_test() {
 
 #[tokio::test]
 async fn test_no_api_key() {
-    env::remove_var("NUMISTA_API_KEY");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
+    cmd.env_remove("NUMISTA_API_KEY");
     cmd.arg("dump")
         .arg("--user-id")
         .arg("123")
         .assert()
         .failure()
-        .stderr(predicates::str::contains("the following required arguments were not provided"));
+        .stderr(predicates::str::contains(
+            "the following required arguments were not provided",
+        ));
 }
 
 #[tokio::test]
