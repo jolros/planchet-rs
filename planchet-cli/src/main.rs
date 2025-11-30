@@ -4,11 +4,19 @@
 //!
 //! # Usage
 //!
-//! The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
-//!
 //! ```bash
-//! planchet-cli --api-key <YOUR_API_KEY> <COMMAND> <COMMAND_ARGS>
+//! planchet-cli --api-key <YOUR_API_KEY> [--lang <LANG>] <COMMAND> <COMMAND_ARGS>
 //! ```
+//!
+//! # Common Arguments
+//!
+//! ## `--api-key`
+//!
+//! The Numista API key. This argument is mandatory, but can be omitted if the `NUMISTA_API_KEY` environment variable is set.
+//!
+//! ## `--lang`
+//!
+//! The language to use for the API response (2-letter ISO code). This argument is optional.
 //!
 //! # Commands
 //!
