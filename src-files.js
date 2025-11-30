@@ -1,2 +1,2 @@
-createSrcSidebar('[["planchet",["",[],["lib.rs","models.rs"]]],["planchet_cli",["",[],["display.rs","main.rs"]]],["planchet_stresstest",["",[],["main.rs"]]]]');
-//{"start":19,"fragment_lengths":[43,50,44]}
+createSrcSidebar('[["planchet",["",[],["de.rs","lib.rs","models.rs"]]],["planchet_cli",["",[],["display.rs","main.rs"]]],["planchet_stresstest",["",[],["main.rs"]]]]');
+//{"start":19,"fragment_lengths":[51,50,44]}
