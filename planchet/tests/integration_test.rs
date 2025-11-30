@@ -627,7 +627,9 @@ async fn add_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = AddCollectedItemParams::new(1);
+    let item = AddCollectedItemParams::new(1)
+        .quantity(2)
+        .private_comment("Test comment");
     let response = client.add_collected_item(1, &item).await.unwrap();
 
     mock.assert();
@@ -674,7 +676,7 @@ async fn edit_collected_item_test() {
         .build()
         .unwrap();
 
-    let item = EditCollectedItemParams::new();
+    let item = EditCollectedItemParams::new().quantity(5);
     let response = client.edit_collected_item(1, 1, &item).await.unwrap();
 
     mock.assert();
