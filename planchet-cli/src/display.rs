@@ -1,4 +1,4 @@
-use planchet::models::{
+use planchet::model::{
     CoinSide, Demonetization, Issuer, IssuingEntity, NumistaType, Printer, Reference, RelatedType,
     RulingAuthority,
 };

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use planchet::{
-    models::{GrantType, OAuthTokenParams, SearchTypesParams, GetCollectedItemsParams},
+    model::{GrantType, OAuthTokenParams, SearchTypesParams, GetCollectedItemsParams},
     ClientBuilder,
 };
 use tracing::Level;
