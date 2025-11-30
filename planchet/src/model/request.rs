@@ -2,6 +2,97 @@ use crate::model::{Category, Grade, GrantType};
 use chrono;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+
+/// Macro to implement common builder methods for collected item parameters.
+macro_rules! impl_collected_item_common_setters {
+    () => {
+        pub fn issue(mut self, issue: i64) -> Self {
+            self.issue = Some(issue);
+            self
+        }
+
+        pub fn quantity(mut self, quantity: i64) -> Self {
+            self.quantity = Some(quantity);
+            self
+        }
+
+        pub fn grade(mut self, grade: Grade) -> Self {
+            self.grade = Some(grade);
+            self
+        }
+
+        pub fn for_swap(mut self, for_swap: bool) -> Self {
+            self.for_swap = Some(for_swap);
+            self
+        }
+
+        pub fn private_comment<S: Into<String>>(mut self, private_comment: S) -> Self {
+            self.private_comment = Some(private_comment.into());
+            self
+        }
+
+        pub fn public_comment<S: Into<String>>(mut self, public_comment: S) -> Self {
+            self.public_comment = Some(public_comment.into());
+            self
+        }
+
+        pub fn price(mut self, price: ItemPriceParams) -> Self {
+            self.price = Some(price);
+            self
+        }
+
+        pub fn collection(mut self, collection: i64) -> Self {
+            self.collection = Some(collection);
+            self
+        }
+
+        pub fn storage_location<S: Into<String>>(mut self, storage_location: S) -> Self {
+            self.storage_location = Some(storage_location.into());
+            self
+        }
+
+        pub fn acquisition_place<S: Into<String>>(mut self, acquisition_place: S) -> Self {
+            self.acquisition_place = Some(acquisition_place.into());
+            self
+        }
+
+        pub fn acquisition_date(mut self, acquisition_date: chrono::NaiveDate) -> Self {
+            self.acquisition_date = Some(acquisition_date);
+            self
+        }
+
+        pub fn serial_number<S: Into<String>>(mut self, serial_number: S) -> Self {
+            self.serial_number = Some(serial_number.into());
+            self
+        }
+
+        pub fn internal_id<S: Into<String>>(mut self, internal_id: S) -> Self {
+            self.internal_id = Some(internal_id.into());
+            self
+        }
+
+        pub fn weight(mut self, weight: Decimal) -> Self {
+            self.weight = Some(weight);
+            self
+        }
+
+        pub fn size(mut self, size: Decimal) -> Self {
+            self.size = Some(size);
+            self
+        }
+
+        pub fn axis(mut self, axis: i64) -> Self {
+            self.axis = Some(axis);
+            self
+        }
+
+        pub fn grading_details(mut self, grading_details: GradingDetailsParams) -> Self {
+            self.grading_details = Some(grading_details);
+            self
+        }
+    };
+}
+
 #[derive(Debug, Serialize)]
 pub struct OAuthTokenParams {
     pub grant_type: GrantType,
@@ -126,90 +217,7 @@ impl AddCollectedItemParams {
         }
     }
 
-    pub fn issue(mut self, issue: i64) -> Self {
-        self.issue = Some(issue);
-        self
-    }
-
-    pub fn quantity(mut self, quantity: i64) -> Self {
-        self.quantity = Some(quantity);
-        self
-    }
-
-    pub fn grade(mut self, grade: Grade) -> Self {
-        self.grade = Some(grade);
-        self
-    }
-
-    pub fn for_swap(mut self, for_swap: bool) -> Self {
-        self.for_swap = Some(for_swap);
-        self
-    }
-
-    pub fn private_comment<S: Into<String>>(mut self, private_comment: S) -> Self {
-        self.private_comment = Some(private_comment.into());
-        self
-    }
-
-    pub fn public_comment<S: Into<String>>(mut self, public_comment: S) -> Self {
-        self.public_comment = Some(public_comment.into());
-        self
-    }
-
-    pub fn price(mut self, price: ItemPriceParams) -> Self {
-        self.price = Some(price);
-        self
-    }
-
-    pub fn collection(mut self, collection: i64) -> Self {
-        self.collection = Some(collection);
-        self
-    }
-
-    pub fn storage_location<S: Into<String>>(mut self, storage_location: S) -> Self {
-        self.storage_location = Some(storage_location.into());
-        self
-    }
-
-    pub fn acquisition_place<S: Into<String>>(mut self, acquisition_place: S) -> Self {
-        self.acquisition_place = Some(acquisition_place.into());
-        self
-    }
-
-    pub fn acquisition_date(mut self, acquisition_date: chrono::NaiveDate) -> Self {
-        self.acquisition_date = Some(acquisition_date);
-        self
-    }
-
-    pub fn serial_number<S: Into<String>>(mut self, serial_number: S) -> Self {
-        self.serial_number = Some(serial_number.into());
-        self
-    }
-
-    pub fn internal_id<S: Into<String>>(mut self, internal_id: S) -> Self {
-        self.internal_id = Some(internal_id.into());
-        self
-    }
-
-    pub fn weight(mut self, weight: Decimal) -> Self {
-        self.weight = Some(weight);
-        self
-    }
-
-    pub fn size(mut self, size: Decimal) -> Self {
-        self.size = Some(size);
-        self
-    }
-
-    pub fn axis(mut self, axis: i64) -> Self {
-        self.axis = Some(axis);
-        self
-    }
-
-    pub fn grading_details(mut self, grading_details: GradingDetailsParams) -> Self {
-        self.grading_details = Some(grading_details);
-        self
-    }
+    impl_collected_item_common_setters!();
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -245,90 +253,7 @@ impl EditCollectedItemParams {
         self
     }
 
-    pub fn issue(mut self, issue: i64) -> Self {
-        self.issue = Some(issue);
-        self
-    }
-
-    pub fn quantity(mut self, quantity: i64) -> Self {
-        self.quantity = Some(quantity);
-        self
-    }
-
-    pub fn grade(mut self, grade: Grade) -> Self {
-        self.grade = Some(grade);
-        self
-    }
-
-    pub fn for_swap(mut self, for_swap: bool) -> Self {
-        self.for_swap = Some(for_swap);
-        self
-    }
-
-    pub fn private_comment<S: Into<String>>(mut self, private_comment: S) -> Self {
-        self.private_comment = Some(private_comment.into());
-        self
-    }
-
-    pub fn public_comment<S: Into<String>>(mut self, public_comment: S) -> Self {
-        self.public_comment = Some(public_comment.into());
-        self
-    }
-
-    pub fn price(mut self, price: ItemPriceParams) -> Self {
-        self.price = Some(price);
-        self
-    }
-
-    pub fn collection(mut self, collection: i64) -> Self {
-        self.collection = Some(collection);
-        self
-    }
-
-    pub fn storage_location<S: Into<String>>(mut self, storage_location: S) -> Self {
-        self.storage_location = Some(storage_location.into());
-        self
-    }
-
-    pub fn acquisition_place<S: Into<String>>(mut self, acquisition_place: S) -> Self {
-        self.acquisition_place = Some(acquisition_place.into());
-        self
-    }
-
-    pub fn acquisition_date(mut self, acquisition_date: chrono::NaiveDate) -> Self {
-        self.acquisition_date = Some(acquisition_date);
-        self
-    }
-
-    pub fn serial_number<S: Into<String>>(mut self, serial_number: S) -> Self {
-        self.serial_number = Some(serial_number.into());
-        self
-    }
-
-    pub fn internal_id<S: Into<String>>(mut self, internal_id: S) -> Self {
-        self.internal_id = Some(internal_id.into());
-        self
-    }
-
-    pub fn weight(mut self, weight: Decimal) -> Self {
-        self.weight = Some(weight);
-        self
-    }
-
-    pub fn size(mut self, size: Decimal) -> Self {
-        self.size = Some(size);
-        self
-    }
-
-    pub fn axis(mut self, axis: i64) -> Self {
-        self.axis = Some(axis);
-        self
-    }
-
-    pub fn grading_details(mut self, grading_details: GradingDetailsParams) -> Self {
-        self.grading_details = Some(grading_details);
-        self
-    }
+    impl_collected_item_common_setters!();
 }
 
 #[derive(Debug, Serialize)]
