@@ -1,7 +1,9 @@
 use planchet::{
-    AddCollectedItemParams, Category, ClientBuilder, EditCollectedItemParams, Error,
-    GetCollectedItemsParams, KnownApiError, OAuthTokenParams, SearchByImageParams,
-    SearchTypesParams, models::{self, GrantType, Orientation},
+    models::{
+        self, AddCollectedItemParams, Category, EditCollectedItemParams, GetCollectedItemsParams,
+        GrantType, OAuthTokenParams, Orientation, SearchByImageParams, SearchTypesParams,
+    },
+    ClientBuilder, Error, KnownApiError,
 };
 use futures::StreamExt;
 use rust_decimal::Decimal;
