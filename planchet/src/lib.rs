@@ -76,7 +76,7 @@
 //!         Ok(types) => {
 //!             println!("Successfully fetched {} types.", types.len());
 //!         }
-//!         Err(Error::ApiError(e)) if e.kind == Some(planchet::KnownApiError::RateLimitExceeded) => {
+//!         Err(Error::ApiError(e)) if e.is_rate_limit_exceeded() => {
 //!             eprintln!("Rate limit exceeded. Please try again later.");
 //!         }
 //!         Err(e) => {
@@ -92,4 +92,4 @@ pub mod models;
 
 // Re-export public API
 pub use client::{Client, ClientBuilder};
-pub use error::{ApiError, Error, KnownApiError, Result};
+pub use error::{ApiError, Error, Result};
