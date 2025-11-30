@@ -61,11 +61,13 @@ planchet-cli --api-key <YOUR_API_KEY> <COMMAND> <COMMAND_ARGS>
 
 ### Commands
 
+```
   dump       Dump the user's collection to the console
   summarize  Summarize the user's collection by issuer
   types      Search the catalogue by types
   type       Get a single type by ID
   help       Invocation instructions
+```
 
 ## License
 
