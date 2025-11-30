@@ -105,7 +105,7 @@ pub struct IssuersResponse {
 pub struct MintDetail {
     /// The ID of the mint. The API may return this as either a string or an
     /// integer.
-    #[serde(deserialize_with = "crate::de::de_i64_from_str_or_int")]
+    #[serde(deserialize_with = "crate::de::de_from_str_or_int")]
     pub id: i64,
     pub name: Option<String>,
     pub local_name: Option<String>,
@@ -211,7 +211,7 @@ pub struct CoinSide {
 pub struct Mint {
     /// The ID of the mint. The API may return this as either a string or an
     /// integer.
-    #[serde(deserialize_with = "crate::de::de_i64_from_str_or_int")]
+    #[serde(deserialize_with = "crate::de::de_from_str_or_int")]
     pub id: i64,
     pub name: String,
 }
@@ -357,7 +357,7 @@ pub struct Publication {
     pub translated_subtitle: Option<String>,
     pub edition: Option<String>,
     pub languages: Vec<Language>,
-    #[serde(deserialize_with = "crate::de::de_optional_i32_from_str", default)]
+    #[serde(deserialize_with = "crate::de::de_optional_from_str_or_int", default)]
     pub year: Option<i32>,
     pub page_count: Option<i64>,
     pub pages: Option<String>,
@@ -380,14 +380,14 @@ pub struct Publication {
 pub struct Contributor {
     pub role: String,
     pub name: String,
-    #[serde(deserialize_with = "crate::de::de_optional_i64_from_str_or_int", default)]
+    #[serde(deserialize_with = "crate::de::de_optional_from_str_or_int", default)]
     pub id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Publisher {
     pub name: String,
-    #[serde(deserialize_with = "crate::de::de_optional_i64_from_str_or_int", default)]
+    #[serde(deserialize_with = "crate::de::de_optional_from_str_or_int", default)]
     pub id: Option<i64>,
 }
 
