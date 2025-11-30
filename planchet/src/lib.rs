@@ -1050,6 +1050,103 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn get_type_full_test() {
+        let mut server = mockito::Server::new_async().await;
+        let url = server.url();
+
+        let mock = server.mock("GET", "/types/99700")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"id":99700,"url":"https:\/\/en.numista.com\/99700","title":"\u00bc Dollar \"Washington Quarter\" (George Rogers Clark National Historical Park, Indiana)","category":"coin","issuer":{"code":"etats-unis","name":"United States"},"min_year":2017,"max_year":2017,"type":"Circulating commemorative coins","ruler":[{"id":4720,"name":"Federal republic","wikidata_id":"Q30"}],"value":{"text":"\u00bc Dollar ","numeric_value":0.25,"numerator":1,"denominator":4,"currency":{"id":59,"name":"Dollar","full_name":"Dollar (1785-date)"}},"demonetization":{"is_demonetized":false},"size":24.3,"thickness":1.75,"shape":"Round","composition":{"text":"Copper-nickel clad copper"},"technique":{"text":"Milled"},"obverse":{"engravers":["William Cousins"],"designers":["John Flanagan"],"description":"The portrait in left profile of George Washington, the first President of the United States from 1789 to 1797, is accompanied with the motto \"IN GOD WE TRUST\" and the lettering \"LIBERTY\" surrounded with the denomination and the inscription \"UNITED STATES OF AMERICA\"","lettering":"UNITED STATES OF AMERICA\r\nIN \r\nGOD WE \r\nTRUST\r\nLIBERTY  P\r\nJF  WC\r\nQUARTER DOLLAR","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-180.jpg","picture_copyright":"Image courtesy of United States Mint"},"reverse":{"engravers":["Frank Morris","Michael Gaudioso"],"description":"George Rogers Clark leading his men through the flooded plains approaching Fort Sackville (frontier settlement of Vincennes).","lettering":"GEORGE ROGERS CLARK\r\nMG\r\nFM\r\nINDIANA   2017   E PLURIBUS UNUM","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-180.jpg","picture_copyright":"United States Mint","picture_copyright_url":"http:\/\/www.usmint.gov"},"series":"United States Mint's \"America the Beautiful\" Quarters Program","commemorated_topic":"George Rogers Clark National Historical Park, Indiana","tags":["Firearms","War","Park"],"references":[{"catalogue":{"id":3,"code":"KM"},"number":"657"}],"weight":5.67,"orientation":"coin","edge":{"description":"Reeded","picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-180.jpg","picture_copyright":"Cyrillius"},"mints":[{"id":"10","name":"United States Mint of Denver"},{"id":"11","name":"United States Mint of Philadelphia"},{"id":"12","name":"United States Mint of San Francisco"}]}"#)
+            .create();
+
+        let client = ClientBuilder::new()
+            .api_key("test_key".to_string())
+            .base_url(url)
+            .build()
+            .unwrap();
+
+        let response = client.get_type(99700, None).await.unwrap();
+
+        mock.assert();
+        assert_eq!(response.id, 99700);
+        assert_eq!(response.url.unwrap().as_str(), "https://en.numista.com/99700");
+        assert_eq!(response.title, "¼ Dollar \"Washington Quarter\" (George Rogers Clark National Historical Park, Indiana)");
+        assert_eq!(response.category.to_string(), "Coin");
+        let issuer = response.issuer.unwrap();
+        assert_eq!(issuer.code, "etats-unis");
+        assert_eq!(issuer.name, "United States");
+        assert_eq!(response.min_year.unwrap(), 2017);
+        assert_eq!(response.max_year.unwrap(), 2017);
+        assert_eq!(response.type_name.unwrap(), "Circulating commemorative coins");
+        let ruler = response.ruler.unwrap();
+        assert_eq!(ruler.len(), 1);
+        assert_eq!(ruler[0].id, 4720);
+        assert_eq!(ruler[0].name, "Federal republic");
+        assert_eq!(ruler[0].wikidata_id.as_ref().unwrap(), "Q30");
+        let value = response.value.unwrap();
+        assert_eq!(value.text.unwrap(), "¼ Dollar ");
+        assert_eq!(value.numeric_value.unwrap(), Decimal::new(25, 2));
+        assert_eq!(value.numerator.unwrap(), 1);
+        assert_eq!(value.denominator.unwrap(), 4);
+        let currency = value.currency.unwrap();
+        assert_eq!(currency.id, 59);
+        assert_eq!(currency.name, "Dollar");
+        assert_eq!(currency.full_name, "Dollar (1785-date)");
+        assert_eq!(response.demonetization.unwrap().is_demonetized, false);
+        assert_eq!(response.size.unwrap(), Decimal::new(243, 1));
+        assert_eq!(response.thickness.unwrap(), Decimal::new(175, 2));
+        assert_eq!(response.shape.unwrap(), "Round");
+        assert_eq!(response.composition.unwrap().text.unwrap(), "Copper-nickel clad copper");
+        assert_eq!(response.technique.unwrap().text.unwrap(), "Milled");
+        let obverse = response.obverse.unwrap();
+        assert_eq!(obverse.engravers.unwrap(), vec!["William Cousins"]);
+        assert_eq!(obverse.designers.unwrap(), vec!["John Flanagan"]);
+        assert_eq!(obverse.description.unwrap(), "The portrait in left profile of George Washington, the first President of the United States from 1789 to 1797, is accompanied with the motto \"IN GOD WE TRUST\" and the lettering \"LIBERTY\" surrounded with the denomination and the inscription \"UNITED STATES OF AMERICA\"");
+        assert_eq!(obverse.lettering.unwrap(), "UNITED STATES OF AMERICA\r\nIN \r\nGOD WE \r\nTRUST\r\nLIBERTY  P\r\nJF  WC\r\nQUARTER DOLLAR");
+        let obverse_lettering_scripts = obverse.lettering_scripts.unwrap();
+        assert_eq!(obverse_lettering_scripts.len(), 1);
+        assert_eq!(obverse_lettering_scripts[0].name, "Latin");
+        assert_eq!(obverse.picture.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/5044-original.jpg");
+        assert_eq!(obverse.thumbnail.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/5044-180.jpg");
+        assert_eq!(obverse.picture_copyright.unwrap(), "Image courtesy of United States Mint");
+        let reverse = response.reverse.unwrap();
+        assert_eq!(reverse.engravers.unwrap(), vec!["Frank Morris", "Michael Gaudioso"]);
+        assert_eq!(reverse.description.unwrap(), "George Rogers Clark leading his men through the flooded plains approaching Fort Sackville (frontier settlement of Vincennes).");
+        assert_eq!(reverse.lettering.unwrap(), "GEORGE ROGERS CLARK\r\nMG\r\nFM\r\nINDIANA   2017   E PLURIBUS UNUM");
+        let reverse_lettering_scripts = reverse.lettering_scripts.unwrap();
+        assert_eq!(reverse_lettering_scripts.len(), 1);
+        assert_eq!(reverse_lettering_scripts[0].name, "Latin");
+        assert_eq!(reverse.picture.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/5045-original.jpg");
+        assert_eq!(reverse.thumbnail.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/5045-180.jpg");
+        assert_eq!(reverse.picture_copyright.unwrap(), "United States Mint");
+        assert_eq!(reverse.picture_copyright_url.unwrap().as_str(), "http://www.usmint.gov/");
+        assert_eq!(response.series.unwrap(), "United States Mint's \"America the Beautiful\" Quarters Program");
+        assert_eq!(response.commemorated_topic.unwrap(), "George Rogers Clark National Historical Park, Indiana");
+        assert_eq!(response.tags.unwrap(), vec!["Firearms", "War", "Park"]);
+        let references = response.references.unwrap();
+        assert_eq!(references.len(), 1);
+        assert_eq!(references[0].catalogue.id, 3);
+        assert_eq!(references[0].catalogue.code, "KM");
+        assert_eq!(references[0].number, "657");
+        assert_eq!(response.weight.unwrap(), Decimal::new(567, 2));
+        assert_eq!(response.orientation.unwrap(), models::Orientation::Coin);
+        let edge = response.edge.unwrap();
+        assert_eq!(edge.description.unwrap(), "Reeded");
+        assert_eq!(edge.picture.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/4024-original.jpg");
+        assert_eq!(edge.thumbnail.unwrap().as_str(), "https://en.numista.com/catalogue/photos/etats-unis/4024-180.jpg");
+        assert_eq!(edge.picture_copyright.unwrap(), "Cyrillius");
+        let mints = response.mints.unwrap();
+        assert_eq!(mints.len(), 3);
+        assert_eq!(mints[0].id, "10");
+        assert_eq!(mints[0].name, "United States Mint of Denver");
+        assert_eq!(mints[1].id, "11");
+        assert_eq!(mints[1].name, "United States Mint of Philadelphia");
+        assert_eq!(mints[2].id, "12");
+        assert_eq!(mints[2].name, "United States Mint of San Francisco");
+    }
+
+    #[tokio::test]
     async fn search_types_test() {
         let mut server = mockito::Server::new_async().await;
         let url = server.url();
