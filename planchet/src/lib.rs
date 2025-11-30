@@ -144,7 +144,7 @@ impl From<serde_json::Error> for Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The main client for interacting with the Numista API.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Client {
     client: ClientWithMiddleware,
     base_url: String,
@@ -358,22 +358,23 @@ impl Client {
     ///
     /// * `params` - The search parameters.
     pub fn stream_all_types<'a>(
-        &self,
+        &'a self,
         params: SearchTypesParams<'a>,
     ) -> impl Stream<Item = Result<models::SearchTypeResult>> + 'a {
         struct State<'a> {
-            client: Client,
+            client: &'a Client,
             params: SearchTypesParams<'a>,
-            current_page: i64,
             buffer: std::vec::IntoIter<models::SearchTypeResult>,
             items_fetched: i64,
             total_items: Option<i64>,
         }
 
+        let mut initial_params = params;
+        initial_params.page = Some(1);
+
         let initial_state = State {
-            client: self.clone(),
-            params,
-            current_page: 1,
+            client: self,
+            params: initial_params,
             buffer: Vec::new().into_iter(),
             items_fetched: 0,
             total_items: None,
@@ -394,10 +395,7 @@ impl Client {
             }
 
             // Buffer is empty, fetch the next page
-            let mut params = state.params.clone();
-            params.page = Some(state.current_page);
-
-            match state.client.search_types(&params).await {
+            match state.client.search_types(&state.params).await {
                 Ok(response) => {
                     if state.total_items.is_none() {
                         state.total_items = Some(response.count);
@@ -410,7 +408,7 @@ impl Client {
                     }
 
                     // Increment page number and refill buffer
-                    state.current_page += 1;
+                    state.params.page = Some(state.params.page.unwrap_or(0) + 1);
                     state.buffer = response.types.into_iter();
 
                     // Return the first item from the new buffer

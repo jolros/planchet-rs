@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Orientation {
     Coin,
@@ -16,7 +16,7 @@ pub enum Orientation {
     Nine,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum Grade {
     G,
@@ -28,7 +28,7 @@ pub enum Grade {
     Unc,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PublicationType {
     Volume,
@@ -37,7 +37,7 @@ pub enum PublicationType {
     ArticleGroup,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Cover {
     Softcover,
@@ -46,14 +46,14 @@ pub enum Cover {
     HiddenSpiral,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GrantType {
     AuthorizationCode,
     ClientCredentials,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Mark {
     pub id: i64,
     pub title: Option<String>,
@@ -61,31 +61,31 @@ pub struct Mark {
     pub letters: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Signature {
     pub signer_name: String,
     pub signer_title: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradePrice {
     pub grade: Grade,
     pub price: Decimal,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ItemPrice {
     pub value: Decimal,
     pub currency: IsoCurrency,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PricesResponse {
     pub currency: IsoCurrency,
     pub prices: Vec<GradePrice>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct IssuerDetail {
     pub code: String,
     pub name: String,
@@ -95,13 +95,13 @@ pub struct IssuerDetail {
     pub level: Option<i8>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct IssuersResponse {
     pub count: i64,
     pub issuers: Vec<IssuerDetail>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct MintDetail {
     pub id: i64,
     pub name: Option<String>,
@@ -114,13 +114,13 @@ pub struct MintDetail {
     pub wikidata_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct MintsResponse {
     pub count: i64,
     pub mints: Vec<MintDetail>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CatalogueDetail {
     pub id: i64,
     pub code: String,
@@ -130,26 +130,26 @@ pub struct CatalogueDetail {
     pub isbn13: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CataloguesResponse {
     pub count: i64,
     pub catalogues: Vec<CatalogueDetail>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Issuer {
     pub code: String,
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Currency {
     pub id: i64,
     pub name: String,
     pub full_name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Value {
     pub text: Option<String>,
     pub numeric_value: Option<Decimal>,
@@ -158,7 +158,7 @@ pub struct Value {
     pub currency: Option<Currency>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RulingAuthority {
     pub id: i64,
     pub name: String,
@@ -166,28 +166,28 @@ pub struct RulingAuthority {
     pub nomisma_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Composition {
     pub text: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Technique {
     pub text: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Demonetization {
     pub is_demonetized: bool,
     pub demonetization_date: Option<NaiveDate>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct LetteringScript {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CoinSide {
     pub engravers: Option<Vec<String>>,
     pub designers: Option<Vec<String>>,
@@ -204,7 +204,7 @@ pub struct CoinSide {
     pub picture_license_url: Option<Url>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Mint {
     /// The ID of the mint. Although the API documentation specifies this as an
     /// integer, in practice it is returned as a string.
@@ -212,13 +212,13 @@ pub struct Mint {
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Reference {
     pub catalogue: Catalogue,
     pub number: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Catalogue {
     pub id: i64,
     pub code: String,
@@ -226,7 +226,7 @@ pub struct Catalogue {
 
 use std::fmt;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Category {
     Coin,
@@ -244,14 +244,14 @@ impl fmt::Display for Category {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct IssuingEntity {
     pub id: i64,
     pub name: String,
     pub wikidata_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct NumistaType {
     pub id: i64,
     pub url: Option<Url>,
@@ -290,13 +290,13 @@ pub struct NumistaType {
     pub references: Option<Vec<Reference>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Printer {
     pub id: i64,
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RelatedType {
     pub id: i64,
     pub title: String,
@@ -306,7 +306,7 @@ pub struct RelatedType {
     pub max_year: Option<i32>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Issue {
     pub id: i64,
     pub is_dated: Option<bool>,
@@ -322,13 +322,13 @@ pub struct Issue {
     pub references: Option<Vec<Reference>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SearchTypesResponse {
     pub count: i64,
     pub types: Vec<SearchTypeResult>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SearchTypeResult {
     pub id: i64,
     pub title: String,
@@ -340,7 +340,7 @@ pub struct SearchTypeResult {
     pub reverse_thumbnail: Option<Url>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Publication {
     pub id: String,
     pub url: Url,
@@ -371,26 +371,26 @@ pub struct Publication {
     pub download_urls: Option<Vec<Url>>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Contributor {
     pub role: String,
     pub name: String,
     pub id: Option<i64>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Publisher {
     pub name: String,
     pub id: Option<i64>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PublicationPlace {
     pub name: String,
     pub geonames_id: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct PublicationPart {
     #[serde(rename = "type")]
     pub type_name: PublicationType,
@@ -399,25 +399,25 @@ pub struct PublicationPart {
     pub volume_number: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct User {
     pub username: String,
     pub avatar: Option<Url>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Collection {
     pub id: i64,
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CollectionsResponse {
     pub count: i64,
     pub collections: Vec<Collection>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CollectedItem {
     pub id: i64,
     pub quantity: i64,
@@ -442,7 +442,7 @@ pub struct CollectedItem {
     pub grading_details: Option<GradingDetails>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CollectedItemType {
     pub id: i64,
     pub title: String,
@@ -450,13 +450,13 @@ pub struct CollectedItemType {
     pub issuer: Option<Issuer>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Picture {
     pub url: Url,
     pub thumbnail_url: Url,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradingDetails {
     pub grading_company: Option<GradingCompany>,
     pub slab_grade: Option<SlabGrade>,
@@ -467,37 +467,37 @@ pub struct GradingDetails {
     pub grading_surface: Option<GradingSurface>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradingCompany {
     pub id: i64,
     pub name: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SlabGrade {
     pub id: i64,
     pub value: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradingDesignation {
     pub id: i64,
     pub value: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradingStrike {
     pub id: i64,
     pub value: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GradingSurface {
     pub id: i64,
     pub value: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct CollectedItemsResponse {
     pub item_count: i64,
     pub item_for_swap_count: i64,
@@ -506,7 +506,7 @@ pub struct CollectedItemsResponse {
     pub items: Vec<CollectedItem>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct OAuthToken {
     pub access_token: String,
     pub token_type: String,
@@ -514,14 +514,14 @@ pub struct OAuthToken {
     pub user_id: i64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct SearchByImageRequest {
     pub category: Option<Category>,
     pub images: Vec<Image>,
     pub max_results: Option<i64>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MimeType {
     #[serde(rename = "image/jpeg")]
@@ -530,14 +530,14 @@ pub enum MimeType {
     Png,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Image {
     pub mime_type: MimeType,
     /// The image data, Base64-encoded.
     pub image_data: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SearchByImageResponse {
     pub count: i64,
     pub types: Vec<SearchByImageTypeResult>,
@@ -545,7 +545,7 @@ pub struct SearchByImageResponse {
     pub experimental_tentative_grade: Option<Grade>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SearchByImageTypeResult {
     pub id: i64,
     pub title: String,
@@ -558,7 +558,7 @@ pub struct SearchByImageTypeResult {
     pub similarity_distance: Option<Decimal>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ApiError {
     pub error_message: String,
 }
