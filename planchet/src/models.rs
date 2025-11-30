@@ -226,8 +226,8 @@ pub struct Catalogue {
 
 use std::fmt;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum Category {
     Coin,
     Banknote,
