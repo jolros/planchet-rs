@@ -3,7 +3,7 @@ use crate::models::{
     self,
     request::{
         AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
-        SearchByImageRequest, SearchTypesParams,
+        SearchByImageParams, SearchTypesParams,
     },
     response::{
         CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse,
@@ -466,7 +466,7 @@ impl Client {
     /// * `request` - The request body.
     pub async fn search_by_image(
         &self,
-        request: &SearchByImageRequest,
+        request: &SearchByImageParams,
     ) -> Result<SearchByImageResponse> {
         let url = format!("{}/search_by_image", self.base_url);
         let mut req = self.client.post(&url);

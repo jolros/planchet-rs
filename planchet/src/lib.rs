@@ -66,7 +66,7 @@ pub use client::{Client, ClientBuilder};
 pub use error::{ApiError, Error, KnownApiError, Result};
 pub use models::request::{
     AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, GradingDetailsParams,
-    Image, ItemPriceParams, MimeType, OAuthTokenParams, SearchByImageRequest, SearchTypesParams,
+    Image, ItemPriceParams, MimeType, OAuthTokenParams, SearchByImageParams, SearchTypesParams,
 };
 pub use models::response::{
     CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse, SearchByImageResponse,
