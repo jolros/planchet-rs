@@ -56,33 +56,16 @@ cargo install --git https://github.com/jolros/planchet-rs.git planchet-cli
 The `--api-key` argument can be omitted if the `NUMISTA_API_KEY` environment variable is set.
 
 ```bash
-planchet-cli --api-key <YOUR_API_KEY> --user-id <USER_ID> <COMMAND>
+planchet-cli --api-key <YOUR_API_KEY> <COMMAND> <COMMAND_ARGS>
 ```
 
 ### Commands
 
-#### `dump`
-
-Dumps the user's collection to the console, sorted by issuer name, year, and title.
-
-```bash
-$ planchet-cli --api-key my-secret-key --user-id 123 dump
-Canada - 5 Cents - Victoria (1858)
-Canada - 1 Cent - George V (1920)
-```
-
-#### `summarize`
-
-Summarizes the user's collection by issuer, showing the total number of items, the oldest item, and the newest item.
-
-```bash
-$ planchet-cli --api-key my-secret-key --user-id 123 summarize
-+--------+-------------+-------------+-------------+
-| Issuer | Total Items | Oldest Item | Newest Item |
-+--------+-------------+-------------+-------------+
-| Canada | 2           | 1858        | 1920        |
-+--------+-------------+-------------+-------------+
-```
+  dump       Dump the user's collection to the console
+  summarize  Summarize the user's collection by issuer
+  types      Search the catalogue by types
+  type       Get a single type by ID
+  help       Invocation instructions
 
 ## License
 
