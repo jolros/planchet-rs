@@ -105,7 +105,7 @@
 <a href=#105 id=105 data-nosnippet>105</a></span><span class="kw">pub struct </span>MintDetail {
 <a href=#106 id=106 data-nosnippet>106</a>    <span class="doccomment">/// The ID of the mint. The API may return this as either a string or an
 <a href=#107 id=107 data-nosnippet>107</a>    /// integer.
-<a href=#108 id=108 data-nosnippet>108</a>    </span><span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_i64_from_str_or_int"</span>)]
+<a href=#108 id=108 data-nosnippet>108</a>    </span><span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_from_str_or_int"</span>)]
 <a href=#109 id=109 data-nosnippet>109</a>    </span><span class="kw">pub </span>id: i64,
 <a href=#110 id=110 data-nosnippet>110</a>    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#111 id=111 data-nosnippet>111</a>    <span class="kw">pub </span>local_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -211,7 +211,7 @@
 <a href=#211 id=211 data-nosnippet>211</a></span><span class="kw">pub struct </span>Mint {
 <a href=#212 id=212 data-nosnippet>212</a>    <span class="doccomment">/// The ID of the mint. The API may return this as either a string or an
 <a href=#213 id=213 data-nosnippet>213</a>    /// integer.
-<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_i64_from_str_or_int"</span>)]
+<a href=#214 id=214 data-nosnippet>214</a>    </span><span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_from_str_or_int"</span>)]
 <a href=#215 id=215 data-nosnippet>215</a>    </span><span class="kw">pub </span>id: i64,
 <a href=#216 id=216 data-nosnippet>216</a>    <span class="kw">pub </span>name: String,
 <a href=#217 id=217 data-nosnippet>217</a>}
@@ -357,7 +357,7 @@
 <a href=#357 id=357 data-nosnippet>357</a>    <span class="kw">pub </span>translated_subtitle: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#358 id=358 data-nosnippet>358</a>    <span class="kw">pub </span>edition: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#359 id=359 data-nosnippet>359</a>    <span class="kw">pub </span>languages: Vec&lt;Language&gt;,
-<a href=#360 id=360 data-nosnippet>360</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_i32_from_str"</span>, default)]
+<a href=#360 id=360 data-nosnippet>360</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_from_str_or_int"</span>, default)]
 <a href=#361 id=361 data-nosnippet>361</a>    </span><span class="kw">pub </span>year: <span class="prelude-ty">Option</span>&lt;i32&gt;,
 <a href=#362 id=362 data-nosnippet>362</a>    <span class="kw">pub </span>page_count: <span class="prelude-ty">Option</span>&lt;i64&gt;,
 <a href=#363 id=363 data-nosnippet>363</a>    <span class="kw">pub </span>pages: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -380,14 +380,14 @@
 <a href=#380 id=380 data-nosnippet>380</a></span><span class="kw">pub struct </span>Contributor {
 <a href=#381 id=381 data-nosnippet>381</a>    <span class="kw">pub </span>role: String,
 <a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">pub </span>name: String,
-<a href=#383 id=383 data-nosnippet>383</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_i64_from_str_or_int"</span>, default)]
+<a href=#383 id=383 data-nosnippet>383</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_from_str_or_int"</span>, default)]
 <a href=#384 id=384 data-nosnippet>384</a>    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;i64&gt;,
 <a href=#385 id=385 data-nosnippet>385</a>}
 <a href=#386 id=386 data-nosnippet>386</a>
 <a href=#387 id=387 data-nosnippet>387</a><span class="attr">#[derive(Debug, Clone, Deserialize)]
 <a href=#388 id=388 data-nosnippet>388</a></span><span class="kw">pub struct </span>Publisher {
 <a href=#389 id=389 data-nosnippet>389</a>    <span class="kw">pub </span>name: String,
-<a href=#390 id=390 data-nosnippet>390</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_i64_from_str_or_int"</span>, default)]
+<a href=#390 id=390 data-nosnippet>390</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::de::de_optional_from_str_or_int"</span>, default)]
 <a href=#391 id=391 data-nosnippet>391</a>    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;i64&gt;,
 <a href=#392 id=392 data-nosnippet>392</a>}
 <a href=#393 id=393 data-nosnippet>393</a>
