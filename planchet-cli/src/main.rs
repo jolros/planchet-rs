@@ -82,7 +82,7 @@ fn build_client(
         client_builder = client_builder.bearer_token(token);
     }
     if let Some(l) = lang {
-        client_builder = client_builder.lang_code(l.to_lowercase());
+        client_builder = client_builder.lang_code(l);
     }
     if let Ok(url) = env::var("NUMISTA_API_URL") {
         client_builder = client_builder.base_url(url);
@@ -136,7 +136,7 @@ fn parse_lang(s: &str) -> Result<String, String> {
     if s.len() != 2 {
         return Err("Language code must be exactly 2 characters".to_string());
     }
-    if !s.chars().all(char::is_alphabetic) {
+    if !s.chars().all(|c| c.is_ascii_alphabetic()) {
         return Err("Language code must contain only letters".to_string());
     }
     Ok(s.to_string())

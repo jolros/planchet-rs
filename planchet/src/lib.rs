@@ -149,7 +149,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Client {
     client: ClientWithMiddleware,
     base_url: String,
-    lang: Option<Language>,
+    lang: Option<String>,
 }
 
 async fn parse_api_error(response: reqwest::Response) -> Error {
@@ -252,6 +252,14 @@ impl Middleware for LoggingMiddleware {
     }
 }
 
+macro_rules! add_lang_param {
+    ($self:expr, $req:expr) => {
+        if let Some(ref l) = $self.lang {
+            $req = $req.query(&[("lang", l)]);
+        }
+    };
+}
+
 impl Client {
     async fn get_request<T, Q>(&self, path: &str, query: Option<&Q>) -> Result<T>
     where
@@ -260,11 +268,7 @@ impl Client {
     {
         let url = format!("{}{}", self.base_url, path);
         let mut req = self.client.get(&url);
-        if let Some(l) = self.lang {
-            if let Some(code) = l.to_639_1() {
-                req = req.query(&[("lang", code)]);
-            }
-        }
+        add_lang_param!(self, req);
         if let Some(q) = query {
             req = req.query(q);
         }
@@ -497,11 +501,7 @@ impl Client {
     ) -> Result<CollectedItem> {
         let url = format!("{}/users/{}/collected_items", self.base_url, user_id);
         let mut req = self.client.post(&url);
-        if let Some(l) = self.lang {
-            if let Some(code) = l.to_639_1() {
-                req = req.query(&[("lang", code)]);
-            }
-        }
+        add_lang_param!(self, req);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
@@ -542,11 +542,7 @@ impl Client {
             self.base_url, user_id, item_id
         );
         let mut req = self.client.patch(&url);
-        if let Some(l) = self.lang {
-            if let Some(code) = l.to_639_1() {
-                req = req.query(&[("lang", code)]);
-            }
-        }
+        add_lang_param!(self, req);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
@@ -567,11 +563,7 @@ impl Client {
             self.base_url, user_id, item_id
         );
         let mut req = self.client.delete(&url);
-        if let Some(l) = self.lang {
-            if let Some(code) = l.to_639_1() {
-                req = req.query(&[("lang", code)]);
-            }
-        }
+        add_lang_param!(self, req);
         let response = req.send().await?;
 
         if response.status().is_success() {
@@ -601,11 +593,7 @@ impl Client {
     ) -> Result<SearchByImageResponse> {
         let url = format!("{}/search_by_image", self.base_url);
         let mut req = self.client.post(&url);
-        if let Some(l) = self.lang {
-            if let Some(code) = l.to_639_1() {
-                req = req.query(&[("lang", code)]);
-            }
-        }
+        add_lang_param!(self, req);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(request)?)
@@ -763,7 +751,7 @@ impl<'a> ClientBuilder<'a> {
 
     /// Sets the language code to use for requests.
     pub fn lang_code<S: Into<Cow<'a, str>>>(mut self, lang_code: S) -> Self {
-        if let Some(l) = Language::from_639_1(&lang_code.into()) {
+        if let Some(l) = Language::from_639_1(&lang_code.into().to_lowercase()) {
             self.lang = Some(l);
         }
         self
@@ -800,10 +788,12 @@ impl<'a> ClientBuilder<'a> {
             .map(|s| s.into_owned())
             .unwrap_or_else(|| "https://api.numista.com/v3".to_string());
 
+        let lang = self.lang.and_then(|l| l.to_639_1().map(|s| s.to_string()));
+
         Ok(Client {
             client,
             base_url,
-            lang: self.lang,
+            lang,
         })
     }
 }
