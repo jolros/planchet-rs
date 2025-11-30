@@ -50,6 +50,14 @@
 //! | 42 | 5 Cents - Victoria | coin     | Canada | 1858     | 1901     |
 //! +----+--------------------+----------+--------+----------+----------+
 //! ```
+//!
+//! ## `type`
+//!
+//! Gets a single type by its ID.
+//!
+//! ```bash
+//! $ planchet-cli --api-key my-secret-key type --id 42
+//! ```
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use futures::stream::TryStreamExt;
@@ -139,12 +147,6 @@ enum Commands {
         all: bool,
     },
     /// Get a single type by ID.
-    ///
-    /// # Example
-    ///
-    /// ```bash
-    /// $ planchet-cli --api-key my-secret-key type --id 42
-    /// ```
     Type {
         /// The ID of the type to get.
         #[arg(long)]
