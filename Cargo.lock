@@ -1237,6 +1237,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "planchet-stresstest"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "planchet",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "potential_utf"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
