@@ -1,3 +1,5 @@
+![planchet-rs header](./.github/assets/planchet_rs_header.png)
+
 # planchet
 
 [![Documentation](https://img.shields.io/badge/docs-main-blue)](https://jolros.github.io/planchet-rs/)
