@@ -19,6 +19,7 @@ chrono = { workspace = true }
 iso_currency = { workspace = true }
 isolang = { workspace = true }
 futures = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
 mockito = { workspace = true }

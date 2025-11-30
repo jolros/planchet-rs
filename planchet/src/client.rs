@@ -1,4 +1,4 @@
-use crate::error::{ApiError, ApiErrorResponse, Error, KnownApiError, Result};
+use crate::error::{ApiError, Error, Result};
 use crate::models::{
     self,
     request::{
@@ -28,6 +28,11 @@ pub struct Client {
     lang: Option<String>,
 }
 
+#[derive(Debug, Clone, serde::Deserialize)]
+struct ApiErrorResponse {
+    error_message: String,
+}
+
 async fn parse_api_error(response: reqwest::Response) -> Error {
     let status_code = response.status().as_u16();
     let api_error_response = match response.json::<ApiErrorResponse>().await {
@@ -35,19 +40,9 @@ async fn parse_api_error(response: reqwest::Response) -> Error {
         Err(e) => return e.into(),
     };
 
-    let kind = match status_code {
-        400 => Some(KnownApiError::InvalidParameter),
-        401 => Some(KnownApiError::Unauthorized),
-        404 => Some(KnownApiError::NotFound),
-        429 => Some(KnownApiError::RateLimitExceeded),
-        501 => Some(KnownApiError::NoUserAssociatedWithApiKey),
-        _ => None,
-    };
-
     Error::ApiError(ApiError {
         message: api_error_response.error_message,
         status: status_code,
-        kind,
     })
 }
 
