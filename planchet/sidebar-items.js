@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Error","KnownApiError"],"mod":["de","models"],"struct":["AddCollectedItem","ApiError","Client","ClientBuilder","EditCollectedItem","GetCollectedItemsParams","GradingDetails","ItemPrice","OAuthTokenParams","SearchTypesParams"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"mod":["client","de","error","models"]};
