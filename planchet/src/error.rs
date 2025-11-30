@@ -12,28 +12,28 @@ pub struct ApiError {
 impl ApiError {
     /// Checks if the error is due to an invalid or missing parameter (HTTP 400).
     ///
-    /// See <https://en.numista.com/api/doc/#section/Errors> for more details.
+    /// See <https://numista.com/api/doc> for more details.
     pub fn is_invalid_parameter(&self) -> bool {
         self.status == 400
     }
 
     /// Checks if the error is due to an invalid or expired API key (HTTP 401).
     ///
-    /// See <https://en.numista.com/api/doc/#section/Errors> for more details.
+    /// See <https://numista.com/api/doc> for more details.
     pub fn is_unauthorized(&self) -> bool {
         self.status == 401
     }
 
     /// Checks if the requested resource could not be found (HTTP 404).
     ///
-    /// See <https://en.numista.com/api/doc/#section/Errors> for more details.
+    /// See <https://numista.com/api/doc> for more details.
     pub fn is_not_found(&self) -> bool {
         self.status == 404
     }
 
     /// Checks if the API rate limit has been exceeded (HTTP 429).
     ///
-    /// See <https://en.numista.com/api/doc/#section/Errors> for more details.
+    /// See <https://numista.com/api/doc> for more details.
     pub fn is_rate_limit_exceeded(&self) -> bool {
         self.status == 429
     }
@@ -42,7 +42,7 @@ impl ApiError {
     ///
     /// This is specific to the `client_credentials` grant type.
     ///
-    /// See <https://en.numista.com/api/doc/#section/Errors> for more details.
+    /// See <https://numista.com/api/doc> for more details.
     pub fn is_no_user_associated_with_api_key(&self) -> bool {
         self.status == 501
     }
