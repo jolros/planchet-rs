@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
     println!("{:#?}", mints);
     if let Some(mint) = mints.mints.first() {
         println!("Calling get_mint()");
-        println!("{:#?}", client.get_mint(&mint.id, None).await?);
+        println!("{:#?}", client.get_mint(mint.id, None).await?);
     }
 
     println!("Calling get_catalogues()");

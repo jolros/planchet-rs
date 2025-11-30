@@ -103,9 +103,10 @@ pub struct IssuersResponse {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct MintDetail {
-    /// The ID of the mint. Although the API documentation specifies this as an
-    /// integer, in practice it is returned as a string.
-    pub id: String,
+    /// The ID of the mint. The API may return this as either a string or an
+    /// integer.
+    #[serde(deserialize_with = "crate::de::de_i64_from_str_or_int")]
+    pub id: i64,
     pub name: Option<String>,
     pub local_name: Option<String>,
     pub place: Option<String>,
@@ -208,9 +209,10 @@ pub struct CoinSide {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Mint {
-    /// The ID of the mint. Although the API documentation specifies this as an
-    /// integer, in practice it is returned as a string.
-    pub id: String,
+    /// The ID of the mint. The API may return this as either a string or an
+    /// integer.
+    #[serde(deserialize_with = "crate::de::de_i64_from_str_or_int")]
+    pub id: i64,
     pub name: String,
 }
 
