@@ -765,11 +765,11 @@ async fn search_by_image_test() {
         images: vec![
             model::request::Image {
                 mime_type: model::request::MimeType::Jpeg,
-                image_data: "jpeg_data".to_string(),
+                image_data: "jpeg_data".to_string().into(),
             },
             model::request::Image {
                 mime_type: model::request::MimeType::Png,
-                image_data: "png_data".to_string(),
+                image_data: "png_data".to_string().into(),
             },
         ],
         max_results: None,
