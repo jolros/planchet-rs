@@ -740,11 +740,11 @@ async fn search_by_image_test() {
             "images": [
                 {
                     "mime_type": "image/jpeg",
-                    "image_data": "jpeg_data"
+                    "image_data": "anBlZ19kYXRh"
                 },
                 {
                     "mime_type": "image/png",
-                    "image_data": "png_data"
+                    "image_data": "cG5nX2RhdGE="
                 }
             ],
             "max_results": null
@@ -763,14 +763,8 @@ async fn search_by_image_test() {
     let request = SearchByImageParams {
         category: None,
         images: vec![
-            model::request::Image {
-                mime_type: model::request::MimeType::Jpeg,
-                image_data: "jpeg_data".to_string().into(),
-            },
-            model::request::Image {
-                mime_type: model::request::MimeType::Png,
-                image_data: "png_data".to_string().into(),
-            },
+            model::request::Image::new(model::request::MimeType::Jpeg, "jpeg_data").unwrap(),
+            model::request::Image::new(model::request::MimeType::Png, "png_data").unwrap(),
         ],
         max_results: None,
     };

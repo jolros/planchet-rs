@@ -5,9 +5,11 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+pub mod image;
 pub mod request;
 pub mod response;
 
+pub use image::*;
 pub use request::*;
 pub use response::*;
 

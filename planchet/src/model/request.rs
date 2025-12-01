@@ -1,10 +1,8 @@
-use crate::model::{Category, Grade, GrantType};
-use base64::prelude::*;
+use crate::model::{image::Base64Image, Category, Grade, GrantType};
 use chrono;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::io;
-use std::path::Path;
 
 #[derive(Debug, Serialize)]
 pub struct OAuthTokenParams {
@@ -333,40 +331,6 @@ pub enum MimeType {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Base64Image(pub String);
-
-impl From<String> for Base64Image {
-    fn from(s: String) -> Self {
-        Base64Image(s)
-    }
-}
-
-impl From<Base64Image> for String {
-    fn from(val: Base64Image) -> Self {
-        val.0
-    }
-}
-
-pub trait ImageSource {
-    fn to_base64(&self) -> io::Result<Base64Image>;
-}
-
-impl<T: AsRef<[u8]>> ImageSource for T {
-    fn to_base64(&self) -> io::Result<Base64Image> {
-        let b64 = BASE64_STANDARD.encode(self);
-        Ok(Base64Image(b64))
-    }
-}
-
-impl ImageSource for Path {
-    fn to_base64(&self) -> io::Result<Base64Image> {
-        let bytes = std::fs::read(self)?;
-        let b64 = BASE64_STANDARD.encode(bytes);
-        Ok(Base64Image(b64))
-    }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Image {
     pub mime_type: MimeType,
     /// The image data, Base64-encoded.
@@ -374,16 +338,14 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(mime_type: MimeType) -> Self {
-        Self {
+    pub fn new<S: crate::model::image::ImageSource + ?Sized>(
+        mime_type: MimeType,
+        source: &S,
+    ) -> io::Result<Self> {
+        Ok(Self {
             mime_type,
-            image_data: Base64Image("".to_string()),
-        }
-    }
-
-    pub fn set_image<S: ImageSource + ?Sized>(&mut self, source: &S) -> io::Result<&mut Self> {
-        self.image_data = source.to_base64()?;
-        Ok(self)
+            image_data: source.to_base64()?,
+        })
     }
 }
 
