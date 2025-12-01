@@ -1,7 +1,9 @@
-use crate::model::{Category, Grade, GrantType};
+use crate::model::{image::Base64Image, Category, Grade, GrantType};
 use chrono;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use std::io;
+
 #[derive(Debug, Serialize)]
 pub struct OAuthTokenParams {
     pub grant_type: GrantType,
@@ -332,7 +334,19 @@ pub enum MimeType {
 pub struct Image {
     pub mime_type: MimeType,
     /// The image data, Base64-encoded.
-    pub image_data: String,
+    pub image_data: Base64Image,
+}
+
+impl Image {
+    pub fn new<S: crate::model::image::ImageSource + ?Sized>(
+        mime_type: MimeType,
+        source: &S,
+    ) -> io::Result<Self> {
+        Ok(Self {
+            mime_type,
+            image_data: source.to_base64()?,
+        })
+    }
 }
 
 /// Parameters for searching for types.

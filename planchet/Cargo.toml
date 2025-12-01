@@ -20,6 +20,7 @@ iso_currency = { workspace = true }
 isolang = { workspace = true }
 futures = { workspace = true }
 thiserror = { workspace = true }
+base64 = { workspace = true }
 
 [dev-dependencies]
 mockito = { workspace = true }
