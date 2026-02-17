@@ -123,26 +123,37 @@ impl Middleware for LoggingMiddleware {
     }
 }
 
-macro_rules! add_lang_param {
-    ($self:expr, $req:expr) => {
-        if let Some(ref l) = $self.lang {
-            $req = $req.query(&[("lang", l)]);
-        }
-    };
-}
-
 impl Client {
+    fn build_url(&self, path: &str) -> reqwest::Url {
+        let mut url = reqwest::Url::parse(&format!("{}{}", self.base_url, path))
+            .expect("Invalid base URL + path configuration");
+        if let Some(ref l) = self.lang {
+            url.query_pairs_mut().append_pair("lang", l);
+        }
+        url
+    }
+
     async fn get_request<T, Q>(&self, path: &str, query: Option<&Q>) -> Result<T>
     where
         T: DeserializeOwned,
         Q: Serialize + ?Sized,
     {
-        let url = format!("{}{}", self.base_url, path);
-        let mut req = self.client.get(&url);
-        add_lang_param!(self, req);
+        let mut url = self.build_url(path);
+
         if let Some(q) = query {
-            req = req.query(q);
+            let qs = serde_urlencoded::to_string(q).map_err(|e| Error::Request(Box::new(e)))?;
+            if !qs.is_empty() {
+                let current = url.query().unwrap_or("");
+                let new_query = if current.is_empty() {
+                    qs
+                } else {
+                    format!("{}&{}", current, qs)
+                };
+                url.set_query(Some(&new_query));
+            }
         }
+
+        let req = self.client.get(url);
         let response = req.send().await?;
         process_response(response).await
     }
@@ -261,7 +272,6 @@ impl Client {
 
                     // If the page is empty, we're done for good.
                     if response.types.is_empty() {
-                        state.total_items = Some(state.items_fetched); // Prevent any further calls
                         return None;
                     }
 
@@ -370,9 +380,8 @@ impl Client {
         user_id: i64,
         item: &AddCollectedItemParams,
     ) -> Result<CollectedItem> {
-        let url = format!("{}/users/{}/collected_items", self.base_url, user_id);
-        let mut req = self.client.post(&url);
-        add_lang_param!(self, req);
+        let url = self.build_url(&format!("/users/{}/collected_items", user_id));
+        let req = self.client.post(url);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
@@ -408,12 +417,11 @@ impl Client {
         item_id: i64,
         item: &EditCollectedItemParams,
     ) -> Result<CollectedItem> {
-        let url = format!(
-            "{}/users/{}/collected_items/{}",
-            self.base_url, user_id, item_id
-        );
-        let mut req = self.client.patch(&url);
-        add_lang_param!(self, req);
+        let url = self.build_url(&format!(
+            "/users/{}/collected_items/{}",
+            user_id, item_id
+        ));
+        let req = self.client.patch(url);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(item)?)
@@ -429,12 +437,11 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to delete.
     pub async fn delete_collected_item(&self, user_id: i64, item_id: i64) -> Result<()> {
-        let url = format!(
-            "{}/users/{}/collected_items/{}",
-            self.base_url, user_id, item_id
-        );
-        let mut req = self.client.delete(&url);
-        add_lang_param!(self, req);
+        let url = self.build_url(&format!(
+            "/users/{}/collected_items/{}",
+            user_id, item_id
+        ));
+        let req = self.client.delete(url);
         let response = req.send().await?;
 
         if response.status().is_success() {
@@ -462,9 +469,8 @@ impl Client {
         &self,
         request: &SearchByImageParams,
     ) -> Result<SearchByImageResponse> {
-        let url = format!("{}/search_by_image", self.base_url);
-        let mut req = self.client.post(&url);
-        add_lang_param!(self, req);
+        let url = self.build_url("/search_by_image");
+        let req = self.client.post(url);
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(request)?)
