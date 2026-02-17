@@ -499,9 +499,10 @@ async fn test_api_key_from_arg() {
         .create_async()
         .await;
 
-    env::remove_var("NUMISTA_API_KEY");
+    // env::remove_var("NUMISTA_API_KEY");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
-    cmd.arg("--api-key")
+    cmd.env_remove("NUMISTA_API_KEY") // Use Command::env_remove instead of global env::remove_var
+        .arg("--api-key")
         .arg("arg_key")
         .arg("dump")
         .arg("--user-id")
@@ -579,15 +580,16 @@ async fn test_api_key_from_env() {
         .create_async()
         .await;
 
-    env::set_var("NUMISTA_API_KEY", "env_key");
+    // env::set_var("NUMISTA_API_KEY", "env_key");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
-    cmd.arg("dump")
+    cmd.env("NUMISTA_API_KEY", "env_key") // Use Command::env instead of global env::set_var
+        .arg("dump")
         .arg("--user-id")
         .arg("123")
         .env("NUMISTA_API_URL", url)
         .assert()
         .failure();
-    env::remove_var("NUMISTA_API_KEY");
+    // env::remove_var("NUMISTA_API_KEY");
 
     mock.assert_async().await;
 }
@@ -706,9 +708,10 @@ async fn test_api_key_precedence() {
         .create_async()
         .await;
 
-    env::set_var("NUMISTA_API_KEY", "env_key");
+    // env::set_var("NUMISTA_API_KEY", "env_key");
     let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("planchet-cli"));
-    cmd.arg("--api-key")
+    cmd.env("NUMISTA_API_KEY", "env_key") // Use Command::env instead of global env::set_var
+        .arg("--api-key")
         .arg("arg_key")
         .arg("dump")
         .arg("--user-id")
@@ -716,7 +719,7 @@ async fn test_api_key_precedence() {
         .env("NUMISTA_API_URL", url)
         .assert()
         .failure();
-    env::remove_var("NUMISTA_API_KEY");
+    // env::remove_var("NUMISTA_API_KEY");
 
     mock.assert_async().await;
 }
