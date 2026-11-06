@@ -2,12 +2,12 @@ use crate::error::{ApiError, Error, Result};
 use crate::model::{
     self,
     request::{
-        AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams, OAuthTokenParams,
-        SearchByImageParams, SearchTypesParams,
+        AddCollectedItemParams, EditCollectedItemParams, GetCollectedItemsParams,
+        GetSalesRecordsParams, OAuthTokenParams, SearchByImageParams, SearchTypesParams,
     },
     response::{
         CataloguesResponse, CollectionsResponse, IssuersResponse, MintsResponse,
-        SearchByImageResponse, SearchTypesResponse,
+        ObjectTypesResponse, SalesRecordsResponse, SearchByImageResponse, SearchTypesResponse,
     },
     CollectedItem, CollectedItems, GradePrices, MintDetail, NumistaType, OAuthToken, Publication,
     User,
@@ -194,6 +194,24 @@ impl Client {
         .await
     }
 
+    /// Gets the sales records for a type.
+    ///
+    /// # Arguments
+    ///
+    /// * `type_id` - The ID of the type.
+    /// * `params` - The query parameters for filtering and pagination.
+    pub async fn get_sales_records(
+        &self,
+        type_id: i64,
+        params: &GetSalesRecordsParams,
+    ) -> Result<SalesRecordsResponse> {
+        self.get_request(
+            &format!("/types/{}/sales_records", type_id),
+            Some(params),
+        )
+        .await
+    }
+
     /// Searches for types in the Numista catalogue.
     ///
     /// # Arguments
@@ -261,7 +279,6 @@ impl Client {
 
                     // If the page is empty, we're done for good.
                     if response.types.is_empty() {
-                        state.total_items = Some(state.items_fetched); // Prevent any further calls
                         return None;
                     }
 
@@ -304,6 +321,11 @@ impl Client {
     pub async fn get_mint(&self, mint_id: i64) -> Result<MintDetail> {
         self.get_request(&format!("/mints/{}", mint_id), None::<&()>)
             .await
+    }
+
+    /// Gets the list of object types.
+    pub async fn get_object_types(&self) -> Result<ObjectTypesResponse> {
+        self.get_request("/object_types", None::<&()>).await
     }
 
     /// Gets the list of catalogues.
@@ -457,7 +479,7 @@ impl Client {
     ///
     /// # Arguments
     ///
-    /// * `request` - The request body.
+    /// * `request` - The request body and parameters.
     pub async fn search_by_image(
         &self,
         request: &SearchByImageParams,
@@ -465,6 +487,9 @@ impl Client {
         let url = format!("{}/search_by_image", self.base_url);
         let mut req = self.client.post(&url);
         add_lang_param!(self, req);
+        if let Some(activate) = request.activate_experimental_features {
+            req = req.query(&[("activate_experimental_features", activate)]);
+        }
         let response = req
             .header("Content-Type", "application/json")
             .body(serde_json::to_string(request)?)

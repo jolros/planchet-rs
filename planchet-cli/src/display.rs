@@ -1,6 +1,6 @@
 use planchet::model::{
-    CoinSide, Demonetization, Issuer, IssuingEntity, NumistaType, Printer, Reference, RelatedType,
-    RulingAuthority,
+    CoinSide, Demonetization, Issuer, IssuingEntity, NumistaType, ObjectType, Printer, Reference,
+    RelatedType, RulingAuthority,
 };
 use url::Url;
 
@@ -65,6 +65,14 @@ fn print_issuing_entity(label: &str, entity: Option<&IssuingEntity>, indent: usi
     }
 }
 
+fn print_object_type(label: &str, object_type: Option<&ObjectType>, indent: usize) {
+    if let Some(o) = object_type {
+        print_indented(&format!("{}:", label.replace('_', " ")), indent);
+        let next_indent = indent + 2;
+        print_key_value("name", Some(o.name.clone()), next_indent);
+    }
+}
+
 fn print_ruling_authorities(label: &str, authorities: Option<&Vec<RulingAuthority>>, indent: usize) {
     if let Some(a) = authorities {
         if !a.is_empty() {
@@ -122,7 +130,12 @@ pub fn print_numista_type(type_: Option<&NumistaType>, indent: usize) {
         print_key_value("id", Some(t.id), indent);
         print_key_value("url", t.url.as_ref().map(|u| u.to_string()), indent);
         print_key_value("title", Some(t.title.clone()), indent);
-        print_key_value("category", Some(t.category.to_string()), indent);
+        print_key_value(
+            "category",
+            t.category.as_ref().map(|c| c.to_string()),
+            indent,
+        );
+        print_object_type("object_type", t.object_type.as_ref(), indent);
 
         print_issuer("issuer", t.issuer.as_ref(), indent);
         print_issuing_entity("issuing_entity", t.issuing_entity.as_ref(), indent);

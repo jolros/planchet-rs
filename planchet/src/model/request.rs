@@ -1,5 +1,4 @@
-use crate::model::{Category, Grade, GrantType};
-use chrono;
+use crate::model::{Category, Grade, GrantType, SearchOrder};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize)]
@@ -317,6 +316,37 @@ pub struct SearchByImageParams {
     pub category: Option<Category>,
     pub images: Vec<Image>,
     pub max_results: Option<i64>,
+    #[serde(skip)]
+    pub activate_experimental_features: Option<bool>,
+}
+
+impl SearchByImageParams {
+    pub fn new(images: Vec<Image>) -> Self {
+        Self {
+            category: None,
+            images,
+            max_results: None,
+            activate_experimental_features: None,
+        }
+    }
+
+    pub fn category(mut self, category: Category) -> Self {
+        self.category = Some(category);
+        self
+    }
+
+    pub fn max_results(mut self, max_results: i64) -> Self {
+        self.max_results = Some(max_results);
+        self
+    }
+
+    pub fn activate_experimental_features(
+        mut self,
+        activate_experimental_features: bool,
+    ) -> Self {
+        self.activate_experimental_features = Some(activate_experimental_features);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -339,6 +369,7 @@ pub struct Image {
 #[derive(Debug, Default, Serialize, Clone)]
 pub struct SearchTypesParams {
     category: Option<Category>,
+    object_type: Option<i64>,
     q: Option<String>,
     issuer: Option<String>,
     catalogue: Option<i64>,
@@ -349,6 +380,7 @@ pub struct SearchTypesParams {
     date: Option<String>,
     size: Option<String>,
     weight: Option<String>,
+    order: Option<SearchOrder>,
     page: Option<i64>,
     count: Option<i64>,
 }
@@ -362,6 +394,12 @@ impl SearchTypesParams {
     /// Sets the category to search in.
     pub fn category(mut self, category: Category) -> Self {
         self.category = Some(category);
+        self
+    }
+
+    /// Sets the object type ID to search for.
+    pub fn object_type(mut self, object_type: i64) -> Self {
+        self.object_type = Some(object_type);
         self
     }
 
@@ -434,6 +472,52 @@ impl SearchTypesParams {
     /// Sets the weight to search for.
     pub fn weight<S: Into<String>>(mut self, weight: S) -> Self {
         self.weight = Some(weight.into());
+        self
+    }
+
+    /// Sets the sort order for the search results.
+    pub fn order(mut self, order: SearchOrder) -> Self {
+        self.order = Some(order);
+        self
+    }
+
+    /// Sets the page to return.
+    pub fn page(mut self, page: i64) -> Self {
+        self.page = Some(page);
+        self
+    }
+
+    /// Sets the number of results per page.
+    pub fn count(mut self, count: i64) -> Self {
+        self.count = Some(count);
+        self
+    }
+}
+
+/// Parameters for getting sales records of a type.
+#[derive(Debug, Default, Serialize, Clone)]
+pub struct GetSalesRecordsParams {
+    issue_id: Option<i64>,
+    currency: Option<String>,
+    page: Option<i64>,
+    count: Option<i64>,
+}
+
+impl GetSalesRecordsParams {
+    /// Creates a new `GetSalesRecordsParams`.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets the issue ID to filter sales records by.
+    pub fn issue_id(mut self, issue_id: i64) -> Self {
+        self.issue_id = Some(issue_id);
+        self
+    }
+
+    /// Sets the currency (3-letter ISO 4217 code) to convert sales prices into.
+    pub fn currency<S: Into<String>>(mut self, currency: S) -> Self {
+        self.currency = Some(currency.into());
         self
     }
 

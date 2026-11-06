@@ -1,13 +1,13 @@
 use planchet::{
     model::{
         self, AddCollectedItemParams, Category, EditCollectedItemParams, GetCollectedItemsParams,
-        GrantType, OAuthTokenParams, Orientation, SearchByImageParams, SearchTypesParams,
+        GetSalesRecordsParams, Grade, GrantType, OAuthTokenParams, Orientation,
+        SearchByImageParams, SearchOrder, SearchTypesParams,
     },
     ClientBuilder, Error,
 };
 use futures::StreamExt;
 use rust_decimal::Decimal;
-use serde_json;
 
 #[tokio::test]
 async fn get_publication_full_test() {
@@ -128,7 +128,7 @@ async fn get_type_full_test() {
     let mock = server.mock("GET", "/types/99700")
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(r#"{"id":99700,"url":"https:\/\/en.numista.com\/99700","title":"\u00bc Dollar \"Washington Quarter\" (George Rogers Clark National Historical Park, Indiana)","category":"coin","issuer":{"code":"etats-unis","name":"United States"},"min_year":2017,"max_year":2017,"type":"Circulating commemorative coins","ruler":[{"id":4720,"name":"Federal republic","wikidata_id":"Q30"}],"value":{"text":"\u00bc Dollar ","numeric_value":0.25,"numerator":1,"denominator":4,"currency":{"id":59,"name":"Dollar","full_name":"Dollar (1785-date)"}},"demonetization":{"is_demonetized":false},"size":24.3,"thickness":1.75,"shape":"Round","composition":{"text":"Copper-nickel clad copper"},"technique":{"text":"Milled"},"obverse":{"engravers":["William Cousins"],"designers":["John Flanagan"],"description":"The portrait in left profile of George Washington, the first President of the United States from 1789 to 1797, is accompanied with the motto \"IN GOD WE TRUST\" and the lettering \"LIBERTY\" surrounded with the denomination and the inscription \"UNITED STATES OF AMERICA\"","lettering":"UNITED STATES OF AMERICA\r\nIN \r\nGOD WE \r\nTRUST\r\nLIBERTY  P\r\nJF  WC\r\nQUARTER DOLLAR","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-180.jpg","picture_copyright":"Image courtesy of United States Mint"},"reverse":{"engravers":["Frank Morris","Michael Gaudioso"],"description":"George Rogers Clark leading his men through the flooded plains approaching Fort Sackville (frontier settlement of Vincennes).","lettering":"GEORGE ROGERS CLARK\r\nMG\r\nFM\r\nINDIANA   2017   E PLURIBUS UNUM","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-180.jpg","picture_copyright":"United States Mint","picture_copyright_url":"http:\/\/www.usmint.gov"},"series":"United States Mint's \"America the Beautiful\" Quarters Program","commemorated_topic":"George Rogers Clark National Historical Park, Indiana","tags":["Firearms","War","Park"],"references":[{"catalogue":{"id":3,"code":"KM"},"number":"657"}],"weight":5.67,"orientation":"coin","edge":{"description":"Reeded","picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-180.jpg","picture_copyright":"Cyrillius"},"mints":[{"id":"10","name":"United States Mint of Denver"},{"id":"11","name":"United States Mint of Philadelphia"},{"id":"12","name":"United States Mint of San Francisco"}]}"#)
+        .with_body(r#"{"id":99700,"url":"https:\/\/en.numista.com\/99700","title":"\u00bc Dollar \"Washington Quarter\" (George Rogers Clark National Historical Park, Indiana)","object_type":{"id":2,"name":"Circulating commemorative coins"},"category":"coin","issuer":{"code":"etats-unis","name":"United States"},"min_year":2017,"max_year":2017,"type":"Circulating commemorative coins","ruler":[{"id":4720,"name":"Federal republic","wikidata_id":"Q30","group":{"id":10,"name":"Modern Republic"}}],"value":{"text":"\u00bc Dollar ","numeric_value":0.25,"numerator":1,"denominator":4,"currency":{"id":59,"name":"Dollar","full_name":"Dollar (1785-date)"}},"demonetization":{"is_demonetized":false},"size":24.3,"thickness":1.75,"shape":"Round","composition":{"text":"Copper-nickel clad copper"},"technique":{"text":"Milled"},"obverse":{"engravers":["William Cousins"],"designers":["John Flanagan"],"description":"The portrait in left profile of George Washington, the first President of the United States from 1789 to 1797, is accompanied with the motto \"IN GOD WE TRUST\" and the lettering \"LIBERTY\" surrounded with the denomination and the inscription \"UNITED STATES OF AMERICA\"","lettering":"UNITED STATES OF AMERICA\r\nIN \r\nGOD WE \r\nTRUST\r\nLIBERTY  P\r\nJF  WC\r\nQUARTER DOLLAR","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5044-180.jpg","picture_copyright":"Image courtesy of United States Mint"},"reverse":{"engravers":["Frank Morris","Michael Gaudioso"],"description":"George Rogers Clark leading his men through the flooded plains approaching Fort Sackville (frontier settlement of Vincennes).","lettering":"GEORGE ROGERS CLARK\r\nMG\r\nFM\r\nINDIANA   2017   E PLURIBUS UNUM","lettering_scripts":[{"name":"Latin"}],"picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/5045-180.jpg","picture_copyright":"United States Mint","picture_copyright_url":"http:\/\/www.usmint.gov"},"series":"United States Mint's \"America the Beautiful\" Quarters Program","commemorated_topic":"George Rogers Clark National Historical Park, Indiana","tags":["Firearms","War","Park"],"references":[{"catalogue":{"id":3,"code":"KM"},"number":"657"}],"weight":5.67,"orientation":"coin","edge":{"description":"Reeded","picture":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-original.jpg","thumbnail":"https:\/\/en.numista.com\/catalogue\/photos\/etats-unis\/4024-180.jpg","picture_copyright":"Cyrillius"},"mints":[{"id":"10","name":"United States Mint of Denver"},{"id":"11","name":"United States Mint of Philadelphia"},{"id":"12","name":"United States Mint of San Francisco"}]}"#)
         .create();
 
     let client = ClientBuilder::new()
@@ -143,7 +143,10 @@ async fn get_type_full_test() {
     assert_eq!(response.id, 99700);
     assert_eq!(response.url.unwrap().as_str(), "https://en.numista.com/99700");
     assert_eq!(response.title, "¼ Dollar \"Washington Quarter\" (George Rogers Clark National Historical Park, Indiana)");
-    assert_eq!(response.category.to_string(), "Coin");
+    let object_type = response.object_type.unwrap();
+    assert_eq!(object_type.id, 2);
+    assert_eq!(object_type.name, "Circulating commemorative coins");
+    assert_eq!(response.category.unwrap().to_string(), "Coin");
     let issuer = response.issuer.unwrap();
     assert_eq!(issuer.code, "etats-unis");
     assert_eq!(issuer.name, "United States");
@@ -155,6 +158,9 @@ async fn get_type_full_test() {
     assert_eq!(ruler[0].id, 4720);
     assert_eq!(ruler[0].name, "Federal republic");
     assert_eq!(ruler[0].wikidata_id.as_ref().unwrap(), "Q30");
+    let ruler_group = ruler[0].group.as_ref().unwrap();
+    assert_eq!(ruler_group.id, 10);
+    assert_eq!(ruler_group.name, "Modern Republic");
     let value = response.value.unwrap();
     assert_eq!(value.text.unwrap(), "¼ Dollar ");
     assert_eq!(value.numeric_value.unwrap(), Decimal::new(25, 2));
@@ -164,7 +170,7 @@ async fn get_type_full_test() {
     assert_eq!(currency.id, 59);
     assert_eq!(currency.name, "Dollar");
     assert_eq!(currency.full_name, "Dollar (1785-date)");
-    assert_eq!(response.demonetization.unwrap().is_demonetized, false);
+    assert!(!response.demonetization.unwrap().is_demonetized);
     assert_eq!(response.size.unwrap(), Decimal::new(243, 1));
     assert_eq!(response.thickness.unwrap(), Decimal::new(175, 2));
     assert_eq!(response.shape.unwrap(), "Round");
@@ -227,6 +233,8 @@ async fn search_types_test() {
         mockito::Matcher::UrlEncoded("q".into(), "victoria".into()),
         mockito::Matcher::UrlEncoded("lang".into(), "es".into()),
         mockito::Matcher::UrlEncoded("category".into(), "coin".into()),
+        mockito::Matcher::UrlEncoded("object_type".into(), "147".into()),
+        mockito::Matcher::UrlEncoded("order".into(), "relevance".into()),
       ]))
       .with_status(200)
       .with_header("content-type", "application/json")
@@ -236,6 +244,10 @@ async fn search_types_test() {
             {
               "id": 420,
               "title": "5 Cents - Victoria",
+              "object_type": {
+                "id": 1,
+                "name": "Standard circulation coins"
+              },
               "category": "coin",
               "issuer": {
                 "code": "canada",
@@ -257,13 +269,18 @@ async fn search_types_test() {
 
     let params = SearchTypesParams::new()
         .q("victoria")
-        .category(Category::Coin);
+        .category(Category::Coin)
+        .object_type(147)
+        .order(SearchOrder::Relevance);
     let response = client.search_types(&params).await.unwrap();
 
     mock.assert();
     assert_eq!(response.count, 1);
     assert_eq!(response.types.len(), 1);
     assert_eq!(response.types[0].id, 420);
+    let object_type = response.types[0].object_type.as_ref().unwrap();
+    assert_eq!(object_type.id, 1);
+    assert_eq!(object_type.name, "Standard circulation coins");
 }
 
 #[test]
@@ -376,7 +393,7 @@ async fn get_issues_test() {
     let mock = server.mock("GET", "/types/420/issues")
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(r#"[{"id": 1, "is_dated": true}]"#)
+        .with_body(r#"[{"id": 1, "is_dated": true, "year": 1920, "gregorian_year": 1920, "month": 5, "day": 14, "signatures": [{"signer_name": "John Doe", "signer_title": "Governor", "picture": "https://en.numista.com/signatures/1.jpg"}]}]"#)
         .create();
 
     let client = ClientBuilder::new()
@@ -390,6 +407,15 @@ async fn get_issues_test() {
     mock.assert();
     assert_eq!(response.len(), 1);
     assert_eq!(response[0].id, 1);
+    assert_eq!(response[0].month, Some(5));
+    assert_eq!(response[0].day, Some(14));
+    let signatures = response[0].signatures.as_ref().unwrap();
+    assert_eq!(signatures[0].signer_name, "John Doe");
+    assert_eq!(signatures[0].signer_title.as_deref(), Some("Governor"));
+    assert_eq!(
+        signatures[0].picture.as_ref().unwrap().as_str(),
+        "https://en.numista.com/signatures/1.jpg"
+    );
 }
 
 #[tokio::test]
@@ -413,6 +439,120 @@ async fn get_prices_test() {
 
     mock.assert();
     assert_eq!(response.currency, iso_currency::Currency::USD);
+}
+
+#[tokio::test]
+async fn get_sales_records_test() {
+    let mut server = mockito::Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock("GET", "/types/420/sales_records")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("issue_id".into(), "123".into()),
+            mockito::Matcher::UrlEncoded("currency".into(), "USD".into()),
+            mockito::Matcher::UrlEncoded("page".into(), "1".into()),
+            mockito::Matcher::UrlEncoded("count".into(), "50".into()),
+        ]))
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(
+            r#"{
+                "sales_count": 2,
+                "sales_records": [
+                    {
+                        "auction_house": {
+                            "id": 71,
+                            "name": "Katz Coins Notes & Supplies Corp."
+                        },
+                        "auction_title": "Auction 190",
+                        "auction_date": "2026-04-10",
+                        "lot_number": "1731",
+                        "lot_url": "https://katzauction.com/lot/87056",
+                        "issue_id": 123,
+                        "grade": "unc",
+                        "grade_details": "NGC MS64",
+                        "price": {
+                            "amount": 625.00,
+                            "currency": "EUR",
+                            "premium_included": false,
+                            "converted_amount": 719.42
+                        },
+                        "pictures": [
+                            {
+                                "url": "https://en.numista.com/sales_archive/pictures/69dca4c1715cb.jpg",
+                                "thumbnail": "https://en.numista.com/sales_archive/pictures/69dca4c1715cb-mini.jpg",
+                                "picture_copyright": "Katz",
+                                "picture_copyright_url": "https://katzauction.com/"
+                            }
+                        ]
+                    },
+                    {
+                        "auction_house": {
+                            "id": 1,
+                            "name": "Heritage Auctions"
+                        },
+                        "auction_title": "World Coins Select Auction",
+                        "auction_date": "2025-05-29",
+                        "issue_id": null
+                    }
+                ]
+            }"#,
+        )
+        .create();
+
+    let client = ClientBuilder::new()
+        .api_key("test_key")
+        .base_url(url)
+        .build()
+        .unwrap();
+
+    let params = GetSalesRecordsParams::new()
+        .issue_id(123)
+        .currency("USD")
+        .page(1)
+        .count(50);
+    let response = client.get_sales_records(420, &params).await.unwrap();
+
+    mock.assert();
+    assert_eq!(response.sales_count, 2);
+    assert_eq!(response.sales_records.len(), 2);
+
+    let first = &response.sales_records[0];
+    assert_eq!(first.auction_house.id, 71);
+    assert_eq!(
+        first.auction_house.name,
+        "Katz Coins Notes & Supplies Corp."
+    );
+    assert_eq!(first.auction_title, "Auction 190");
+    assert_eq!(
+        first.auction_date,
+        chrono::NaiveDate::from_ymd_opt(2026, 4, 10).unwrap()
+    );
+    assert_eq!(first.lot_number.as_deref(), Some("1731"));
+    assert_eq!(
+        first.lot_url.as_ref().unwrap().as_str(),
+        "https://katzauction.com/lot/87056"
+    );
+    assert_eq!(first.issue_id, Some(123));
+    assert_eq!(first.grade, Some(Grade::Unc));
+    assert_eq!(first.grade_details.as_deref(), Some("NGC MS64"));
+    let price = first.price.as_ref().unwrap();
+    assert_eq!(price.amount, Decimal::new(62500, 2));
+    assert_eq!(price.currency, iso_currency::Currency::EUR);
+    assert_eq!(price.premium_included, Some(false));
+    assert_eq!(price.converted_amount, Some(Decimal::new(71942, 2)));
+    let pictures = first.pictures.as_ref().unwrap();
+    assert_eq!(pictures.len(), 1);
+    assert_eq!(
+        pictures[0].url.as_str(),
+        "https://en.numista.com/sales_archive/pictures/69dca4c1715cb.jpg"
+    );
+    assert_eq!(pictures[0].picture_copyright.as_deref(), Some("Katz"));
+
+    let second = &response.sales_records[1];
+    assert_eq!(second.auction_house.id, 1);
+    assert_eq!(second.issue_id, None);
 }
 
 #[tokio::test]
@@ -486,6 +626,58 @@ async fn get_mint_test() {
 
     mock.assert();
     assert_eq!(response.id, 1);
+}
+
+#[tokio::test]
+async fn get_object_types_test() {
+    let mut server = mockito::Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock("GET", "/object_types")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(
+            r#"{
+                "count": 2,
+                "object_types": [
+                    {
+                        "id": 147,
+                        "name": "Coins",
+                        "description": "Rigid objects, usually made of metal."
+                    },
+                    {
+                        "id": 1,
+                        "name": "Standard circulation coins",
+                        "description": "Coins intended for circulation.",
+                        "parent": {
+                            "id": 147,
+                            "name": "Coins"
+                        }
+                    }
+                ]
+            }"#,
+        )
+        .create();
+
+    let client = ClientBuilder::new()
+        .api_key("test_key")
+        .base_url(url)
+        .build()
+        .unwrap();
+
+    let response = client.get_object_types().await.unwrap();
+
+    mock.assert();
+    assert_eq!(response.count, 2);
+    assert_eq!(response.object_types.len(), 2);
+    assert_eq!(response.object_types[0].id, 147);
+    assert_eq!(response.object_types[0].name, "Coins");
+    assert!(response.object_types[0].parent.is_none());
+    assert_eq!(response.object_types[1].id, 1);
+    let parent = response.object_types[1].parent.as_ref().unwrap();
+    assert_eq!(parent.id, 147);
+    assert_eq!(parent.name, "Coins");
 }
 
 #[tokio::test]
@@ -735,6 +927,10 @@ async fn search_by_image_test() {
     let url = server.url();
 
     let mock = server.mock("POST", "/search_by_image")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "activate_experimental_features".into(),
+            "true".into(),
+        ))
         .match_body(mockito::Matcher::Json(serde_json::json!({
             "category": null,
             "images": [
@@ -751,7 +947,23 @@ async fn search_by_image_test() {
         })))
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_body(r#"{"count": 0, "types": []}"#)
+        .with_body(r#"{
+            "count": 1,
+            "types": [
+                {
+                    "id": 420,
+                    "title": "5 Cents - Victoria",
+                    "object_type": {
+                        "id": 1,
+                        "name": "Standard circulation coins"
+                    },
+                    "category": "coin",
+                    "similarity_distance": 0.3260901
+                }
+            ],
+            "experimental_tentative_year": 1900,
+            "experimental_tentative_grade": "vf"
+        }"#)
         .create();
 
     let client = ClientBuilder::new()
@@ -760,23 +972,27 @@ async fn search_by_image_test() {
         .build()
         .unwrap();
 
-    let request = SearchByImageParams {
-        category: None,
-        images: vec![
-            model::request::Image {
-                mime_type: model::request::MimeType::Jpeg,
-                image_data: "jpeg_data".to_string(),
-            },
-            model::request::Image {
-                mime_type: model::request::MimeType::Png,
-                image_data: "png_data".to_string(),
-            },
-        ],
-        max_results: None,
-    };
-    client.search_by_image(&request).await.unwrap();
+    let request = SearchByImageParams::new(vec![
+        model::request::Image {
+            mime_type: model::request::MimeType::Jpeg,
+            image_data: "jpeg_data".to_string(),
+        },
+        model::request::Image {
+            mime_type: model::request::MimeType::Png,
+            image_data: "png_data".to_string(),
+        },
+    ])
+    .activate_experimental_features(true);
+    let response = client.search_by_image(&request).await.unwrap();
 
     mock.assert();
+    assert_eq!(response.count, 1);
+    assert_eq!(response.types[0].id, 420);
+    let object_type = response.types[0].object_type.as_ref().unwrap();
+    assert_eq!(object_type.id, 1);
+    assert_eq!(object_type.name, "Standard circulation coins");
+    assert_eq!(response.experimental_tentative_year, Some(1900));
+    assert_eq!(response.experimental_tentative_grade, Some(Grade::Vf));
 }
 
 #[tokio::test]
@@ -805,6 +1021,38 @@ async fn unauthorized_error_test() {
         Error::ApiError(e) => {
             assert_eq!(e.status, 401);
             assert!(e.is_unauthorized());
+        }
+        _ => panic!("Expected ApiError"),
+    }
+}
+
+#[tokio::test]
+async fn forbidden_error_test() {
+    let mut server = mockito::Server::new_async().await;
+    let url = server.url();
+
+    let mock = server
+        .mock("POST", "/search_by_image")
+        .with_status(403)
+        .with_header("content-type", "application/json")
+        .with_body(r#"{"error_message": "Your API key is not activated for using this API endpoint."}"#)
+        .create();
+
+    let client = ClientBuilder::new()
+        .api_key("test_key")
+        .base_url(url)
+        .build()
+        .unwrap();
+
+    let request = SearchByImageParams::new(vec![]);
+    let response = client.search_by_image(&request).await;
+
+    mock.assert();
+    assert!(response.is_err());
+    match response.err().unwrap() {
+        Error::ApiError(e) => {
+            assert_eq!(e.status, 403);
+            assert!(e.is_forbidden());
         }
         _ => panic!("Expected ApiError"),
     }

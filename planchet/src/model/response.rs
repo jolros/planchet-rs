@@ -1,8 +1,8 @@
 use serde::Deserialize;
 
 use super::{
-    CatalogueDetail, Collection, Grade, IssuerDetail, MintDetail, SearchByImageTypeResult,
-    SearchTypeResult,
+    CatalogueDetail, Collection, Grade, IssuerDetail, MintDetail, ObjectTypeDetail, SalesRecord,
+    SearchByImageTypeResult, SearchTypeResult,
 };
 
 #[derive(Debug, Clone, Deserialize)]
@@ -18,6 +18,12 @@ pub struct MintsResponse {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct ObjectTypesResponse {
+    pub count: i64,
+    pub object_types: Vec<ObjectTypeDetail>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct CataloguesResponse {
     pub count: i64,
     pub catalogues: Vec<CatalogueDetail>,
@@ -27,6 +33,12 @@ pub struct CataloguesResponse {
 pub struct SearchTypesResponse {
     pub count: i64,
     pub types: Vec<SearchTypeResult>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SalesRecordsResponse {
+    pub sales_count: i64,
+    pub sales_records: Vec<SalesRecord>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

@@ -1,7 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use planchet::{
-    model::{GrantType, OAuthTokenParams, SearchTypesParams, GetCollectedItemsParams},
+    model::{
+        GetCollectedItemsParams, GetSalesRecordsParams, GrantType, OAuthTokenParams,
+        SearchTypesParams,
+    },
     ClientBuilder,
 };
 use tracing::Level;
@@ -64,6 +67,10 @@ async fn main() -> Result<()> {
         println!("{:#?}", client.get_mint(mint.id).await?);
     }
 
+    println!("Calling get_object_types()");
+    let object_types = client.get_object_types().await?;
+    println!("{:#?}", object_types);
+
     println!("Calling get_catalogues()");
     let catalogues = client.get_catalogues().await?;
     println!("{:#?}", catalogues);
@@ -100,6 +107,14 @@ async fn main() -> Result<()> {
                     .await?
             );
         }
+
+        println!("Calling get_sales_records()");
+        println!(
+            "{:#?}",
+            client
+                .get_sales_records(item.type_info.id, &GetSalesRecordsParams::new())
+                .await?
+        );
     }
 
     println!("Calling get_user()");

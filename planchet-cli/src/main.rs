@@ -338,7 +338,7 @@ fn print_search_header(count: i64, query: &str, year: Option<i32>) {
         "query: '{}'{}",
         query,
         year.map(|y| format!(", year: {}", y))
-            .unwrap_or_else(|| "".to_string())
+            .unwrap_or_default()
     );
     println!("Found {} results for {}.", count, search_details);
 }

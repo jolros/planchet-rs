@@ -58,6 +58,31 @@ pub enum GrantType {
     ClientCredentials,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchOrder {
+    Value,
+    Ruler,
+    Type,
+    Reference,
+    Date,
+    Relevance,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+pub struct ObjectType {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ObjectTypeDetail {
+    pub id: i64,
+    pub name: String,
+    pub description: Option<String>,
+    pub parent: Option<ObjectType>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct Mark {
     pub id: i64,
@@ -70,6 +95,7 @@ pub struct Mark {
 pub struct Signature {
     pub signer_name: String,
     pub signer_title: Option<String>,
+    pub picture: Option<Url>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -149,11 +175,18 @@ pub struct Value {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct RulingAuthorityGroup {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct RulingAuthority {
     pub id: i64,
     pub name: String,
     pub wikidata_id: Option<String>,
     pub nomisma_id: Option<String>,
+    pub group: Option<RulingAuthorityGroup>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -247,7 +280,8 @@ pub struct NumistaType {
     pub id: i64,
     pub url: Option<Url>,
     pub title: String,
-    pub category: Category,
+    pub object_type: Option<ObjectType>,
+    pub category: Option<Category>,
     pub issuer: Option<Issuer>,
     pub issuing_entity: Option<IssuingEntity>,
     pub secondary_issuing_entity: Option<IssuingEntity>,
@@ -303,6 +337,8 @@ pub struct Issue {
     pub is_dated: Option<bool>,
     pub year: Option<i32>,
     pub gregorian_year: Option<i32>,
+    pub month: Option<i32>,
+    pub day: Option<i32>,
     pub min_year: Option<i32>,
     pub max_year: Option<i32>,
     pub mint_letter: Option<String>,
@@ -317,6 +353,7 @@ pub struct Issue {
 pub struct SearchTypeResult {
     pub id: i64,
     pub title: String,
+    pub object_type: Option<ObjectType>,
     pub category: Option<Category>,
     pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
@@ -500,6 +537,7 @@ pub struct OAuthToken {
 pub struct SearchByImageTypeResult {
     pub id: i64,
     pub title: String,
+    pub object_type: Option<ObjectType>,
     pub category: Option<Category>,
     pub issuer: Option<Issuer>,
     pub min_year: Option<i32>,
@@ -507,4 +545,40 @@ pub struct SearchByImageTypeResult {
     pub obverse_thumbnail: Option<Url>,
     pub reverse_thumbnail: Option<Url>,
     pub similarity_distance: Option<Decimal>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AuctionHouse {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SalePrice {
+    pub amount: Decimal,
+    pub currency: IsoCurrency,
+    pub premium_included: Option<bool>,
+    pub converted_amount: Option<Decimal>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SalePicture {
+    pub url: Url,
+    pub thumbnail: Option<Url>,
+    pub picture_copyright: Option<String>,
+    pub picture_copyright_url: Option<Url>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SalesRecord {
+    pub auction_house: AuctionHouse,
+    pub auction_title: String,
+    pub auction_date: NaiveDate,
+    pub lot_number: Option<String>,
+    pub lot_url: Option<Url>,
+    pub issue_id: Option<i64>,
+    pub grade: Option<Grade>,
+    pub grade_details: Option<String>,
+    pub price: Option<SalePrice>,
+    pub pictures: Option<Vec<SalePicture>>,
 }

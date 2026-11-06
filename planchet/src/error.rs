@@ -24,6 +24,13 @@ impl ApiError {
         self.status == 401
     }
 
+    /// Checks if the error is due to the API key not being activated for the endpoint (HTTP 403).
+    ///
+    /// See <https://numista.com/api/doc> for more details.
+    pub fn is_forbidden(&self) -> bool {
+        self.status == 403
+    }
+
     /// Checks if the requested resource could not be found (HTTP 404).
     ///
     /// See <https://numista.com/api/doc> for more details.
