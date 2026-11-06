@@ -1,6 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `planchet-cli/src/display.rs`."><title>display.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="planchet_cli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.1 (ed61e7d7e 2025-11-07)" data-channel="1.91.1" data-search-js="search-e256b49e.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">planchet_cli/</div>display.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>planchet::model::{
-<a href=#2 id=2 data-nosnippet>2</a>    CoinSide, Demonetization, Issuer, IssuingEntity, NumistaType, Printer, Reference, RelatedType,
-<a href=#3 id=3 data-nosnippet>3</a>    RulingAuthority,
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `planchet-cli/src/display.rs`."><title>display.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-0c87338a.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="planchet_cli" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.1 (58cf8f9c3 2026-10-13)" data-channel="1.99.1" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">planchet_cli/</div>display.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>planchet::model::{
+<a href=#2 id=2 data-nosnippet>2</a>    CoinSide, Demonetization, Issuer, IssuingEntity, NumistaType, ObjectType, Printer, Reference,
+<a href=#3 id=3 data-nosnippet>3</a>    RelatedType, RulingAuthority,
 <a href=#4 id=4 data-nosnippet>4</a>};
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>url::Url;
 <a href=#6 id=6 data-nosnippet>6</a>
@@ -65,121 +65,135 @@
 <a href=#65 id=65 data-nosnippet>65</a>    }
 <a href=#66 id=66 data-nosnippet>66</a>}
 <a href=#67 id=67 data-nosnippet>67</a>
-<a href=#68 id=68 data-nosnippet>68</a><span class="kw">fn </span>print_ruling_authorities(label: <span class="kw-2">&amp;</span>str, authorities: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;RulingAuthority&gt;&gt;, indent: usize) {
-<a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(a) = authorities {
-<a href=#70 id=70 data-nosnippet>70</a>        <span class="kw">if </span>!a.is_empty() {
-<a href=#71 id=71 data-nosnippet>71</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
-<a href=#72 id=72 data-nosnippet>72</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
-<a href=#73 id=73 data-nosnippet>73</a>            <span class="kw">for </span>authority <span class="kw">in </span>a {
-<a href=#74 id=74 data-nosnippet>74</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}"</span>, authority.name), next_indent);
-<a href=#75 id=75 data-nosnippet>75</a>            }
-<a href=#76 id=76 data-nosnippet>76</a>        }
-<a href=#77 id=77 data-nosnippet>77</a>    }
-<a href=#78 id=78 data-nosnippet>78</a>}
-<a href=#79 id=79 data-nosnippet>79</a>
-<a href=#80 id=80 data-nosnippet>80</a><span class="kw">fn </span>print_references(label: <span class="kw-2">&amp;</span>str, references: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;Reference&gt;&gt;, indent: usize) {
-<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = references {
-<a href=#82 id=82 data-nosnippet>82</a>        <span class="kw">if </span>!r.is_empty() {
-<a href=#83 id=83 data-nosnippet>83</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
-<a href=#84 id=84 data-nosnippet>84</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
-<a href=#85 id=85 data-nosnippet>85</a>            <span class="kw">for </span>reference <span class="kw">in </span>r {
-<a href=#86 id=86 data-nosnippet>86</a>                print_indented(
-<a href=#87 id=87 data-nosnippet>87</a>                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}: {}"</span>, reference.catalogue.code, reference.number),
-<a href=#88 id=88 data-nosnippet>88</a>                    next_indent,
-<a href=#89 id=89 data-nosnippet>89</a>                );
-<a href=#90 id=90 data-nosnippet>90</a>            }
-<a href=#91 id=91 data-nosnippet>91</a>        }
-<a href=#92 id=92 data-nosnippet>92</a>    }
-<a href=#93 id=93 data-nosnippet>93</a>}
-<a href=#94 id=94 data-nosnippet>94</a>
-<a href=#95 id=95 data-nosnippet>95</a><span class="kw">fn </span>print_related_types(label: <span class="kw-2">&amp;</span>str, related_types: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;RelatedType&gt;&gt;, indent: usize) {
-<a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = related_types {
-<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">if </span>!r.is_empty() {
-<a href=#98 id=98 data-nosnippet>98</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
-<a href=#99 id=99 data-nosnippet>99</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="kw">for </span>type_ <span class="kw">in </span>r {
-<a href=#101 id=101 data-nosnippet>101</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [{}] {}"</span>, type_.id, type_.title), next_indent);
-<a href=#102 id=102 data-nosnippet>102</a>            }
-<a href=#103 id=103 data-nosnippet>103</a>        }
-<a href=#104 id=104 data-nosnippet>104</a>    }
-<a href=#105 id=105 data-nosnippet>105</a>}
-<a href=#106 id=106 data-nosnippet>106</a>
-<a href=#107 id=107 data-nosnippet>107</a><span class="kw">fn </span>print_printers(label: <span class="kw-2">&amp;</span>str, printers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;Printer&gt;&gt;, indent: usize) {
-<a href=#108 id=108 data-nosnippet>108</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = printers {
-<a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">if </span>!p.is_empty() {
-<a href=#110 id=110 data-nosnippet>110</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
-<a href=#111 id=111 data-nosnippet>111</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
-<a href=#112 id=112 data-nosnippet>112</a>            <span class="kw">for </span>printer <span class="kw">in </span>p {
-<a href=#113 id=113 data-nosnippet>113</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}"</span>, printer.name), next_indent);
-<a href=#114 id=114 data-nosnippet>114</a>            }
-<a href=#115 id=115 data-nosnippet>115</a>        }
-<a href=#116 id=116 data-nosnippet>116</a>    }
-<a href=#117 id=117 data-nosnippet>117</a>}
-<a href=#118 id=118 data-nosnippet>118</a>
-<a href=#119 id=119 data-nosnippet>119</a><span class="kw">pub fn </span>print_numista_type(type_: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>NumistaType&gt;, indent: usize) {
-<a href=#120 id=120 data-nosnippet>120</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = type_ {
-<a href=#121 id=121 data-nosnippet>121</a>        <span class="comment">// Print the required fields first
-<a href=#122 id=122 data-nosnippet>122</a>        </span>print_key_value(<span class="string">"id"</span>, <span class="prelude-val">Some</span>(t.id), indent);
-<a href=#123 id=123 data-nosnippet>123</a>        print_key_value(<span class="string">"url"</span>, t.url.as_ref().map(|u| u.to_string()), indent);
-<a href=#124 id=124 data-nosnippet>124</a>        print_key_value(<span class="string">"title"</span>, <span class="prelude-val">Some</span>(t.title.clone()), indent);
-<a href=#125 id=125 data-nosnippet>125</a>        print_key_value(<span class="string">"category"</span>, <span class="prelude-val">Some</span>(t.category.to_string()), indent);
+<a href=#68 id=68 data-nosnippet>68</a><span class="kw">fn </span>print_object_type(label: <span class="kw-2">&amp;</span>str, object_type: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ObjectType&gt;, indent: usize) {
+<a href=#69 id=69 data-nosnippet>69</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(o) = object_type {
+<a href=#70 id=70 data-nosnippet>70</a>        print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
+<a href=#71 id=71 data-nosnippet>71</a>        <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
+<a href=#72 id=72 data-nosnippet>72</a>        print_key_value(<span class="string">"name"</span>, <span class="prelude-val">Some</span>(o.name.clone()), next_indent);
+<a href=#73 id=73 data-nosnippet>73</a>    }
+<a href=#74 id=74 data-nosnippet>74</a>}
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a><span class="kw">fn </span>print_ruling_authorities(label: <span class="kw-2">&amp;</span>str, authorities: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;RulingAuthority&gt;&gt;, indent: usize) {
+<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(a) = authorities {
+<a href=#78 id=78 data-nosnippet>78</a>        <span class="kw">if </span>!a.is_empty() {
+<a href=#79 id=79 data-nosnippet>79</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
+<a href=#80 id=80 data-nosnippet>80</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
+<a href=#81 id=81 data-nosnippet>81</a>            <span class="kw">for </span>authority <span class="kw">in </span>a {
+<a href=#82 id=82 data-nosnippet>82</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}"</span>, authority.name), next_indent);
+<a href=#83 id=83 data-nosnippet>83</a>            }
+<a href=#84 id=84 data-nosnippet>84</a>        }
+<a href=#85 id=85 data-nosnippet>85</a>    }
+<a href=#86 id=86 data-nosnippet>86</a>}
+<a href=#87 id=87 data-nosnippet>87</a>
+<a href=#88 id=88 data-nosnippet>88</a><span class="kw">fn </span>print_references(label: <span class="kw-2">&amp;</span>str, references: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;Reference&gt;&gt;, indent: usize) {
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = references {
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">if </span>!r.is_empty() {
+<a href=#91 id=91 data-nosnippet>91</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
+<a href=#92 id=92 data-nosnippet>92</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
+<a href=#93 id=93 data-nosnippet>93</a>            <span class="kw">for </span>reference <span class="kw">in </span>r {
+<a href=#94 id=94 data-nosnippet>94</a>                print_indented(
+<a href=#95 id=95 data-nosnippet>95</a>                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}: {}"</span>, reference.catalogue.code, reference.number),
+<a href=#96 id=96 data-nosnippet>96</a>                    next_indent,
+<a href=#97 id=97 data-nosnippet>97</a>                );
+<a href=#98 id=98 data-nosnippet>98</a>            }
+<a href=#99 id=99 data-nosnippet>99</a>        }
+<a href=#100 id=100 data-nosnippet>100</a>    }
+<a href=#101 id=101 data-nosnippet>101</a>}
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a><span class="kw">fn </span>print_related_types(label: <span class="kw-2">&amp;</span>str, related_types: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;RelatedType&gt;&gt;, indent: usize) {
+<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(r) = related_types {
+<a href=#105 id=105 data-nosnippet>105</a>        <span class="kw">if </span>!r.is_empty() {
+<a href=#106 id=106 data-nosnippet>106</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
+<a href=#107 id=107 data-nosnippet>107</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
+<a href=#108 id=108 data-nosnippet>108</a>            <span class="kw">for </span>type_ <span class="kw">in </span>r {
+<a href=#109 id=109 data-nosnippet>109</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- [{}] {}"</span>, type_.id, type_.title), next_indent);
+<a href=#110 id=110 data-nosnippet>110</a>            }
+<a href=#111 id=111 data-nosnippet>111</a>        }
+<a href=#112 id=112 data-nosnippet>112</a>    }
+<a href=#113 id=113 data-nosnippet>113</a>}
+<a href=#114 id=114 data-nosnippet>114</a>
+<a href=#115 id=115 data-nosnippet>115</a><span class="kw">fn </span>print_printers(label: <span class="kw-2">&amp;</span>str, printers: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Vec&lt;Printer&gt;&gt;, indent: usize) {
+<a href=#116 id=116 data-nosnippet>116</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(p) = printers {
+<a href=#117 id=117 data-nosnippet>117</a>        <span class="kw">if </span>!p.is_empty() {
+<a href=#118 id=118 data-nosnippet>118</a>            print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{}:"</span>, label.replace(<span class="string">'_'</span>, <span class="string">" "</span>)), indent);
+<a href=#119 id=119 data-nosnippet>119</a>            <span class="kw">let </span>next_indent = indent + <span class="number">2</span>;
+<a href=#120 id=120 data-nosnippet>120</a>            <span class="kw">for </span>printer <span class="kw">in </span>p {
+<a href=#121 id=121 data-nosnippet>121</a>                print_indented(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"- {}"</span>, printer.name), next_indent);
+<a href=#122 id=122 data-nosnippet>122</a>            }
+<a href=#123 id=123 data-nosnippet>123</a>        }
+<a href=#124 id=124 data-nosnippet>124</a>    }
+<a href=#125 id=125 data-nosnippet>125</a>}
 <a href=#126 id=126 data-nosnippet>126</a>
-<a href=#127 id=127 data-nosnippet>127</a>        print_issuer(<span class="string">"issuer"</span>, t.issuer.as_ref(), indent);
-<a href=#128 id=128 data-nosnippet>128</a>        print_issuing_entity(<span class="string">"issuing_entity"</span>, t.issuing_entity.as_ref(), indent);
-<a href=#129 id=129 data-nosnippet>129</a>        print_issuing_entity(
-<a href=#130 id=130 data-nosnippet>130</a>            <span class="string">"secondary_issuing_entity"</span>,
-<a href=#131 id=131 data-nosnippet>131</a>            t.secondary_issuing_entity.as_ref(),
-<a href=#132 id=132 data-nosnippet>132</a>            indent,
-<a href=#133 id=133 data-nosnippet>133</a>        );
-<a href=#134 id=134 data-nosnippet>134</a>        print_key_value(<span class="string">"min_year"</span>, t.min_year, indent);
-<a href=#135 id=135 data-nosnippet>135</a>        print_key_value(<span class="string">"max_year"</span>, t.max_year, indent);
-<a href=#136 id=136 data-nosnippet>136</a>        print_key_value(<span class="string">"type_name"</span>, t.type_name.as_ref(), indent);
-<a href=#137 id=137 data-nosnippet>137</a>
-<a href=#138 id=138 data-nosnippet>138</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span>t.value {
-<a href=#139 id=139 data-nosnippet>139</a>            print_key_value(<span class="string">"value"</span>, v.text.as_ref(), indent);
-<a href=#140 id=140 data-nosnippet>140</a>        }
-<a href=#141 id=141 data-nosnippet>141</a>
-<a href=#142 id=142 data-nosnippet>142</a>        print_ruling_authorities(<span class="string">"ruling_authorities"</span>, t.ruler.as_ref(), indent);
-<a href=#143 id=143 data-nosnippet>143</a>        print_key_value(<span class="string">"shape"</span>, t.shape.as_ref(), indent);
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = <span class="kw-2">&amp;</span>t.composition {
-<a href=#146 id=146 data-nosnippet>146</a>            print_key_value(<span class="string">"composition"</span>, c.text.as_ref(), indent);
-<a href=#147 id=147 data-nosnippet>147</a>        }
-<a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tech) = <span class="kw-2">&amp;</span>t.technique {
-<a href=#150 id=150 data-nosnippet>150</a>            print_key_value(<span class="string">"technique"</span>, tech.text.as_ref(), indent);
-<a href=#151 id=151 data-nosnippet>151</a>        }
-<a href=#152 id=152 data-nosnippet>152</a>
-<a href=#153 id=153 data-nosnippet>153</a>        print_demonetization(<span class="string">"demonetization"</span>, t.demonetization.as_ref(), indent);
-<a href=#154 id=154 data-nosnippet>154</a>        print_key_value(<span class="string">"weight"</span>, t.weight, indent);
-<a href=#155 id=155 data-nosnippet>155</a>        print_key_value(<span class="string">"size"</span>, t.size, indent);
-<a href=#156 id=156 data-nosnippet>156</a>        print_key_value(<span class="string">"size2"</span>, t.size2, indent);
-<a href=#157 id=157 data-nosnippet>157</a>        print_key_value(<span class="string">"thickness"</span>, t.thickness, indent);
-<a href=#158 id=158 data-nosnippet>158</a>
-<a href=#159 id=159 data-nosnippet>159</a>        print_coin_side(<span class="string">"obverse"</span>, t.obverse.as_ref(), indent);
-<a href=#160 id=160 data-nosnippet>160</a>        print_coin_side(<span class="string">"reverse"</span>, t.reverse.as_ref(), indent);
-<a href=#161 id=161 data-nosnippet>161</a>        print_coin_side(<span class="string">"edge"</span>, t.edge.as_ref(), indent);
-<a href=#162 id=162 data-nosnippet>162</a>        print_coin_side(<span class="string">"watermark"</span>, t.watermark.as_ref(), indent);
-<a href=#163 id=163 data-nosnippet>163</a>
-<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(mints) = <span class="kw-2">&amp;</span>t.mints {
-<a href=#165 id=165 data-nosnippet>165</a>            <span class="kw">if </span>!mints.is_empty() {
-<a href=#166 id=166 data-nosnippet>166</a>                <span class="kw">let </span>mint_names: Vec&lt;String&gt; = mints.iter().map(|m| m.name.clone()).collect();
-<a href=#167 id=167 data-nosnippet>167</a>                print_key_value(<span class="string">"mints"</span>, <span class="prelude-val">Some</span>(mint_names.join(<span class="string">", "</span>)), indent);
-<a href=#168 id=168 data-nosnippet>168</a>            }
-<a href=#169 id=169 data-nosnippet>169</a>        }
-<a href=#170 id=170 data-nosnippet>170</a>
-<a href=#171 id=171 data-nosnippet>171</a>        print_printers(<span class="string">"printers"</span>, t.printers.as_ref(), indent);
-<a href=#172 id=172 data-nosnippet>172</a>        print_key_value(<span class="string">"series"</span>, t.series.as_ref(), indent);
-<a href=#173 id=173 data-nosnippet>173</a>        print_key_value(<span class="string">"commemorated_topic"</span>, t.commemorated_topic.as_ref(), indent);
-<a href=#174 id=174 data-nosnippet>174</a>        print_key_value(<span class="string">"comments"</span>, t.comments.as_ref(), indent);
-<a href=#175 id=175 data-nosnippet>175</a>
-<a href=#176 id=176 data-nosnippet>176</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tags) = <span class="kw-2">&amp;</span>t.tags {
-<a href=#177 id=177 data-nosnippet>177</a>            <span class="kw">if </span>!tags.is_empty() {
-<a href=#178 id=178 data-nosnippet>178</a>                print_key_value(<span class="string">"tags"</span>, <span class="prelude-val">Some</span>(tags.join(<span class="string">", "</span>)), indent);
-<a href=#179 id=179 data-nosnippet>179</a>            }
-<a href=#180 id=180 data-nosnippet>180</a>        }
-<a href=#181 id=181 data-nosnippet>181</a>
-<a href=#182 id=182 data-nosnippet>182</a>        print_related_types(<span class="string">"related_types"</span>, t.related_types.as_ref(), indent);
-<a href=#183 id=183 data-nosnippet>183</a>        print_references(<span class="string">"references"</span>, t.references.as_ref(), indent);
-<a href=#184 id=184 data-nosnippet>184</a>    }
-<a href=#185 id=185 data-nosnippet>185</a>}</code></pre></div></section></main></body></html>
+<a href=#127 id=127 data-nosnippet>127</a><span class="kw">pub fn </span>print_numista_type(type_: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>NumistaType&gt;, indent: usize) {
+<a href=#128 id=128 data-nosnippet>128</a>    <span class="kw">if let </span><span class="prelude-val">Some</span>(t) = type_ {
+<a href=#129 id=129 data-nosnippet>129</a>        <span class="comment">// Print the required fields first
+<a href=#130 id=130 data-nosnippet>130</a>        </span>print_key_value(<span class="string">"id"</span>, <span class="prelude-val">Some</span>(t.id), indent);
+<a href=#131 id=131 data-nosnippet>131</a>        print_key_value(<span class="string">"url"</span>, t.url.as_ref().map(|u| u.to_string()), indent);
+<a href=#132 id=132 data-nosnippet>132</a>        print_key_value(<span class="string">"title"</span>, <span class="prelude-val">Some</span>(t.title.clone()), indent);
+<a href=#133 id=133 data-nosnippet>133</a>        print_key_value(
+<a href=#134 id=134 data-nosnippet>134</a>            <span class="string">"category"</span>,
+<a href=#135 id=135 data-nosnippet>135</a>            t.category.as_ref().map(|c| c.to_string()),
+<a href=#136 id=136 data-nosnippet>136</a>            indent,
+<a href=#137 id=137 data-nosnippet>137</a>        );
+<a href=#138 id=138 data-nosnippet>138</a>        print_object_type(<span class="string">"object_type"</span>, t.object_type.as_ref(), indent);
+<a href=#139 id=139 data-nosnippet>139</a>
+<a href=#140 id=140 data-nosnippet>140</a>        print_issuer(<span class="string">"issuer"</span>, t.issuer.as_ref(), indent);
+<a href=#141 id=141 data-nosnippet>141</a>        print_issuing_entity(<span class="string">"issuing_entity"</span>, t.issuing_entity.as_ref(), indent);
+<a href=#142 id=142 data-nosnippet>142</a>        print_issuing_entity(
+<a href=#143 id=143 data-nosnippet>143</a>            <span class="string">"secondary_issuing_entity"</span>,
+<a href=#144 id=144 data-nosnippet>144</a>            t.secondary_issuing_entity.as_ref(),
+<a href=#145 id=145 data-nosnippet>145</a>            indent,
+<a href=#146 id=146 data-nosnippet>146</a>        );
+<a href=#147 id=147 data-nosnippet>147</a>        print_key_value(<span class="string">"min_year"</span>, t.min_year, indent);
+<a href=#148 id=148 data-nosnippet>148</a>        print_key_value(<span class="string">"max_year"</span>, t.max_year, indent);
+<a href=#149 id=149 data-nosnippet>149</a>        print_key_value(<span class="string">"type_name"</span>, t.type_name.as_ref(), indent);
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(v) = <span class="kw-2">&amp;</span>t.value {
+<a href=#152 id=152 data-nosnippet>152</a>            print_key_value(<span class="string">"value"</span>, v.text.as_ref(), indent);
+<a href=#153 id=153 data-nosnippet>153</a>        }
+<a href=#154 id=154 data-nosnippet>154</a>
+<a href=#155 id=155 data-nosnippet>155</a>        print_ruling_authorities(<span class="string">"ruling_authorities"</span>, t.ruler.as_ref(), indent);
+<a href=#156 id=156 data-nosnippet>156</a>        print_key_value(<span class="string">"shape"</span>, t.shape.as_ref(), indent);
+<a href=#157 id=157 data-nosnippet>157</a>
+<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(c) = <span class="kw-2">&amp;</span>t.composition {
+<a href=#159 id=159 data-nosnippet>159</a>            print_key_value(<span class="string">"composition"</span>, c.text.as_ref(), indent);
+<a href=#160 id=160 data-nosnippet>160</a>        }
+<a href=#161 id=161 data-nosnippet>161</a>
+<a href=#162 id=162 data-nosnippet>162</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tech) = <span class="kw-2">&amp;</span>t.technique {
+<a href=#163 id=163 data-nosnippet>163</a>            print_key_value(<span class="string">"technique"</span>, tech.text.as_ref(), indent);
+<a href=#164 id=164 data-nosnippet>164</a>        }
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a>        print_demonetization(<span class="string">"demonetization"</span>, t.demonetization.as_ref(), indent);
+<a href=#167 id=167 data-nosnippet>167</a>        print_key_value(<span class="string">"weight"</span>, t.weight, indent);
+<a href=#168 id=168 data-nosnippet>168</a>        print_key_value(<span class="string">"size"</span>, t.size, indent);
+<a href=#169 id=169 data-nosnippet>169</a>        print_key_value(<span class="string">"size2"</span>, t.size2, indent);
+<a href=#170 id=170 data-nosnippet>170</a>        print_key_value(<span class="string">"thickness"</span>, t.thickness, indent);
+<a href=#171 id=171 data-nosnippet>171</a>
+<a href=#172 id=172 data-nosnippet>172</a>        print_coin_side(<span class="string">"obverse"</span>, t.obverse.as_ref(), indent);
+<a href=#173 id=173 data-nosnippet>173</a>        print_coin_side(<span class="string">"reverse"</span>, t.reverse.as_ref(), indent);
+<a href=#174 id=174 data-nosnippet>174</a>        print_coin_side(<span class="string">"edge"</span>, t.edge.as_ref(), indent);
+<a href=#175 id=175 data-nosnippet>175</a>        print_coin_side(<span class="string">"watermark"</span>, t.watermark.as_ref(), indent);
+<a href=#176 id=176 data-nosnippet>176</a>
+<a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(mints) = <span class="kw-2">&amp;</span>t.mints {
+<a href=#178 id=178 data-nosnippet>178</a>            <span class="kw">if </span>!mints.is_empty() {
+<a href=#179 id=179 data-nosnippet>179</a>                <span class="kw">let </span>mint_names: Vec&lt;String&gt; = mints.iter().map(|m| m.name.clone()).collect();
+<a href=#180 id=180 data-nosnippet>180</a>                print_key_value(<span class="string">"mints"</span>, <span class="prelude-val">Some</span>(mint_names.join(<span class="string">", "</span>)), indent);
+<a href=#181 id=181 data-nosnippet>181</a>            }
+<a href=#182 id=182 data-nosnippet>182</a>        }
+<a href=#183 id=183 data-nosnippet>183</a>
+<a href=#184 id=184 data-nosnippet>184</a>        print_printers(<span class="string">"printers"</span>, t.printers.as_ref(), indent);
+<a href=#185 id=185 data-nosnippet>185</a>        print_key_value(<span class="string">"series"</span>, t.series.as_ref(), indent);
+<a href=#186 id=186 data-nosnippet>186</a>        print_key_value(<span class="string">"commemorated_topic"</span>, t.commemorated_topic.as_ref(), indent);
+<a href=#187 id=187 data-nosnippet>187</a>        print_key_value(<span class="string">"comments"</span>, t.comments.as_ref(), indent);
+<a href=#188 id=188 data-nosnippet>188</a>
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(tags) = <span class="kw-2">&amp;</span>t.tags {
+<a href=#190 id=190 data-nosnippet>190</a>            <span class="kw">if </span>!tags.is_empty() {
+<a href=#191 id=191 data-nosnippet>191</a>                print_key_value(<span class="string">"tags"</span>, <span class="prelude-val">Some</span>(tags.join(<span class="string">", "</span>)), indent);
+<a href=#192 id=192 data-nosnippet>192</a>            }
+<a href=#193 id=193 data-nosnippet>193</a>        }
+<a href=#194 id=194 data-nosnippet>194</a>
+<a href=#195 id=195 data-nosnippet>195</a>        print_related_types(<span class="string">"related_types"</span>, t.related_types.as_ref(), indent);
+<a href=#196 id=196 data-nosnippet>196</a>        print_references(<span class="string">"references"</span>, t.references.as_ref(), indent);
+<a href=#197 id=197 data-nosnippet>197</a>    }
+<a href=#198 id=198 data-nosnippet>198</a>}
+</code></pre></div></section></main></body></html>

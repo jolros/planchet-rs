@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["planchet",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"planchet/model/enum.Grade.html\" title=\"enum planchet::model::Grade\">Grade</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.91.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"planchet/model/enum.Orientation.html\" title=\"enum planchet::model::Orientation\">Orientation</a>"]]]]);
+    const implementors = Object.fromEntries([["planchet",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.99.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"planchet/model/enum.Grade.html\" title=\"enum planchet::model::Grade\">Grade</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.99.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"struct\" href=\"planchet/model/struct.ObjectType.html\" title=\"struct planchet::model::ObjectType\">ObjectType</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.99.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"planchet/model/enum.Orientation.html\" title=\"enum planchet::model::Orientation\">Orientation</a>",0],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.99.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"planchet/model/enum.SearchOrder.html\" title=\"enum planchet::model::SearchOrder\">SearchOrder</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[512]}
+//{"start":59,"fragment_lengths":[1039]}
