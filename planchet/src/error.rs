@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 /// An error returned by the Numista API.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ApiError {
     /// The error message returned by the API.
     pub message: String,
@@ -62,9 +62,13 @@ pub enum Error {
     #[error("Numista API key is required")]
     ApiKeyMissing,
 
-    /// An error related to the underlying HTTP client or middleware stack.
+    /// An API key or bearer token contained invalid HTTP header characters.
+    #[error("Invalid header value: {0}")]
+    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
+
+    /// An error related to the underlying HTTP client.
     #[error("Request error: {0}")]
-    Request(#[from] Box<dyn std::error::Error + Send + Sync>),
+    Request(#[from] reqwest::Error),
 
     /// An error from `serde_json`.
     #[error("JSON error: {0}")]
@@ -73,18 +77,6 @@ pub enum Error {
     /// An error returned by the Numista API.
     #[error("API error (status {}): {}", .0.status, .0.message)]
     ApiError(ApiError),
-}
-
-impl From<reqwest::Error> for Error {
-    fn from(err: reqwest::Error) -> Self {
-        Error::Request(Box::new(err))
-    }
-}
-
-impl From<reqwest_middleware::Error> for Error {
-    fn from(err: reqwest_middleware::Error) -> Self {
-        Error::Request(Box::new(err))
-    }
 }
 
 /// A `Result` type alias for this crate's `Error` type.

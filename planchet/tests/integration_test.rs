@@ -857,6 +857,9 @@ async fn edit_collected_item_test() {
     let url = server.url();
 
     let mock = server.mock("PATCH", "/users/1/collected_items/1")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "quantity": 5
+        })))
         .with_status(200)
         .with_header("content-type", "application/json")
         .with_body(r#"{"id": 1, "quantity": 1, "type": {"id": 1, "title": "Test", "category": "coin"}, "for_swap": false}"#)
@@ -932,7 +935,6 @@ async fn search_by_image_test() {
             "true".into(),
         ))
         .match_body(mockito::Matcher::Json(serde_json::json!({
-            "category": null,
             "images": [
                 {
                     "mime_type": "image/jpeg",
@@ -942,8 +944,7 @@ async fn search_by_image_test() {
                     "mime_type": "image/png",
                     "image_data": "png_data"
                 }
-            ],
-            "max_results": null
+            ]
         })))
         .with_status(200)
         .with_header("content-type", "application/json")

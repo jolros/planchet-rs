@@ -467,7 +467,7 @@ async fn api_error_test() {
         .env("NUMISTA_API_URL", url);
     cmd.assert()
         .failure()
-        .stderr(predicate::str::contains("Request error"));
+        .stderr(predicate::str::contains("API error (status 500)"));
 }
 
 #[tokio::test]

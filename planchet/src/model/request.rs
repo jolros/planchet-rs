@@ -1,13 +1,19 @@
 use crate::model::{Category, Grade, GrantType, SearchOrder};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Serialize)]
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct OAuthTokenParams {
     pub grant_type: GrantType,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub client_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub client_secret: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub redirect_uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
 }
 
@@ -19,6 +25,34 @@ impl OAuthTokenParams {
             client_id: None,
             client_secret: None,
             redirect_uri: None,
+            scope: None,
+        }
+    }
+
+    /// Creates parameters for the `client_credentials` grant type.
+    pub fn client_credentials() -> Self {
+        Self::new(GrantType::ClientCredentials)
+    }
+
+    /// Creates parameters for the `authorization_code` grant type.
+    pub fn authorization_code<S1, S2, S3, S4>(
+        code: S1,
+        client_id: S2,
+        client_secret: S3,
+        redirect_uri: S4,
+    ) -> Self
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+        S3: Into<String>,
+        S4: Into<String>,
+    {
+        Self {
+            grant_type: GrantType::AuthorizationCode,
+            code: Some(code.into()),
+            client_id: Some(client_id.into()),
+            client_secret: Some(client_secret.into()),
+            redirect_uri: Some(redirect_uri.into()),
             scope: None,
         }
     }
@@ -49,11 +83,13 @@ impl OAuthTokenParams {
     }
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 pub struct GetCollectedItemsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) category: Option<Category>,
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub(crate) type_id: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) collection: Option<i64>,
 }
 
@@ -167,26 +203,43 @@ macro_rules! impl_collected_item_common_setters {
     };
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AddCollectedItemParams {
     #[serde(rename = "type")]
     pub type_id: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub issue: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quantity: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grade: Option<Grade>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub for_swap: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub private_comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub public_comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub price: Option<ItemPriceParams>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub collection: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub storage_location: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acquisition_place: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acquisition_date: Option<chrono::NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub serial_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub internal_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub axis: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_details: Option<GradingDetailsParams>,
 }
 
@@ -217,26 +270,43 @@ impl AddCollectedItemParams {
     impl_collected_item_common_setters!();
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 pub struct EditCollectedItemParams {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub type_id: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub issue: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quantity: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grade: Option<Grade>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub for_swap: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub private_comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub public_comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub price: Option<ItemPriceParams>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub collection: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub storage_location: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acquisition_place: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acquisition_date: Option<chrono::NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub serial_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub internal_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub weight: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<Decimal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub axis: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_details: Option<GradingDetailsParams>,
 }
 
@@ -253,20 +323,36 @@ impl EditCollectedItemParams {
     impl_collected_item_common_setters!();
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ItemPriceParams {
     pub value: Decimal,
     pub currency: String,
 }
 
-#[derive(Debug, Default, Serialize)]
+impl ItemPriceParams {
+    pub fn new<S: Into<String>>(value: Decimal, currency: S) -> Self {
+        Self {
+            value,
+            currency: currency.into(),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 pub struct GradingDetailsParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_company: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub slab_grade: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub slab_number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub cac_sticker: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_designations: Option<Vec<i64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_strike: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub grading_surface: Option<i64>,
 }
 
@@ -311,10 +397,12 @@ impl GradingDetailsParams {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct SearchByImageParams {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<Category>,
     pub images: Vec<Image>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub max_results: Option<i64>,
     #[serde(skip)]
     pub activate_experimental_features: Option<bool>,
@@ -349,7 +437,7 @@ impl SearchByImageParams {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MimeType {
     #[serde(rename = "image/jpeg")]
@@ -358,7 +446,7 @@ pub enum MimeType {
     Png,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Image {
     pub mime_type: MimeType,
     /// The image data, Base64-encoded.
@@ -366,23 +454,38 @@ pub struct Image {
 }
 
 /// Parameters for searching for types.
-#[derive(Debug, Default, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone, PartialEq, Eq)]
 pub struct SearchTypesParams {
-    category: Option<Category>,
-    object_type: Option<i64>,
-    q: Option<String>,
-    issuer: Option<String>,
-    catalogue: Option<i64>,
-    number: Option<String>,
-    ruler: Option<i64>,
-    material: Option<i64>,
-    year: Option<String>,
-    date: Option<String>,
-    size: Option<String>,
-    weight: Option<String>,
-    order: Option<SearchOrder>,
-    page: Option<i64>,
-    count: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) category: Option<Category>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) object_type: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) q: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) issuer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) catalogue: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) number: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) ruler: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) material: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) year: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) size: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) weight: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) order: Option<SearchOrder>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) page: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) count: Option<i64>,
 }
 
 impl SearchTypesParams {
@@ -495,12 +598,16 @@ impl SearchTypesParams {
 }
 
 /// Parameters for getting sales records of a type.
-#[derive(Debug, Default, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone, PartialEq, Eq)]
 pub struct GetSalesRecordsParams {
-    issue_id: Option<i64>,
-    currency: Option<String>,
-    page: Option<i64>,
-    count: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) issue_id: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) currency: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) page: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) count: Option<i64>,
 }
 
 impl GetSalesRecordsParams {

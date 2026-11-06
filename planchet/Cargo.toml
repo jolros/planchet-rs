@@ -6,12 +6,8 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 reqwest = { workspace = true }
-reqwest-middleware = { workspace = true }
 tracing = { workspace = true }
-async-trait = { workspace = true }
-http = { workspace = true }
 serde = { workspace = true }
-tokio = { workspace = true }
 rust_decimal = { workspace = true }
 url = { workspace = true }
 serde_json = { workspace = true }
@@ -23,3 +19,4 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 mockito = { workspace = true }
+tokio = { workspace = true }

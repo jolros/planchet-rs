@@ -70,7 +70,7 @@ use clap::{Parser, Subcommand};
 use futures::stream::TryStreamExt;
 use planchet::{
     model::{
-        CollectedItem, GetCollectedItemsParams, GrantType, OAuthTokenParams, SearchTypeResult,
+        CollectedItem, GetCollectedItemsParams, OAuthTokenParams, SearchTypeResult,
         SearchTypesParams,
     },
     Client, ClientBuilder,
@@ -83,15 +83,8 @@ use tabled::{Table, Tabled};
 mod display;
 
 // Client creation helper
-fn build_client(
-    api_key: String,
-    bearer_token: Option<String>,
-    lang: Option<String>,
-) -> Result<Client> {
+fn build_client(api_key: String, lang: Option<String>) -> Result<Client> {
     let mut client_builder = ClientBuilder::new().api_key(api_key);
-    if let Some(token) = bearer_token {
-        client_builder = client_builder.bearer_token(token);
-    }
     if let Some(l) = lang {
         client_builder = client_builder.lang_code(l);
     }
@@ -106,17 +99,10 @@ async fn fetch_collection(
     user_id: i64,
     lang: Option<String>,
 ) -> Result<Vec<CollectedItem>> {
-    let client = build_client(api_key.clone(), None, lang.clone())?;
-    let token_params = OAuthTokenParams {
-        grant_type: GrantType::ClientCredentials,
-        client_id: None,
-        client_secret: None,
-        code: None,
-        redirect_uri: None,
-        scope: Some("view_collection".to_string()),
-    };
+    let client = build_client(api_key, lang)?;
+    let token_params = OAuthTokenParams::client_credentials().scope("view_collection");
     let token = client.get_oauth_token(&token_params).await?;
-    let client = build_client(api_key, Some(token.access_token), lang)?;
+    let client = client.with_bearer_token(&token.access_token)?;
 
     let params = GetCollectedItemsParams::new();
     let response = client.get_collected_items(user_id, &params).await?;
@@ -350,7 +336,7 @@ async fn search_types(
     all: bool,
     lang: Option<String>,
 ) -> Result<()> {
-    let client = build_client(api_key, None, lang)?;
+    let client = build_client(api_key, lang)?;
     let mut params = SearchTypesParams::new().q(&query);
     if let Some(y) = year {
         params = params.date(y);
@@ -411,7 +397,7 @@ async fn search_types(
 }
 
 async fn get_type(api_key: String, id: i64, lang: Option<String>) -> Result<()> {
-    let client = build_client(api_key, None, lang)?;
+    let client = build_client(api_key, lang)?;
     let type_ = client.get_type(id).await?;
     display::print_numista_type(Some(&type_), 0);
     Ok(())

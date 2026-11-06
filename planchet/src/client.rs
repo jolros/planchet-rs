@@ -13,19 +13,21 @@ use crate::model::{
     User,
 };
 use futures::stream::{self, Stream};
-use http::Extensions;
 use isolang::Language;
-use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest_middleware::{ClientBuilder as MiddlewareClientBuilder, ClientWithMiddleware, Middleware, Next};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Method,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use tracing::{info_span, trace, Instrument};
 
 /// The main client for interacting with the Numista API.
 #[derive(Debug, Clone)]
 pub struct Client {
-    client: ClientWithMiddleware,
+    client: reqwest::Client,
     base_url: String,
     lang: Option<String>,
+    bearer_token: Option<HeaderValue>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -34,116 +36,122 @@ struct ApiErrorResponse {
 }
 
 async fn parse_api_error(response: reqwest::Response) -> Error {
-    let status_code = response.status().as_u16();
-    let api_error_response = match response.json::<ApiErrorResponse>().await {
-        Ok(api_error) => api_error,
+    let status = response.status();
+    let status_code = status.as_u16();
+    let body_bytes = match response.bytes().await {
+        Ok(bytes) => bytes,
         Err(e) => return e.into(),
     };
 
+    if tracing::enabled!(tracing::Level::TRACE) {
+        if let Ok(str_body) = std::str::from_utf8(&body_bytes) {
+            if !str_body.is_empty() {
+                trace!("Response body: {}", str_body);
+            }
+        }
+    }
+
+    let message = match serde_json::from_slice::<ApiErrorResponse>(&body_bytes) {
+        Ok(api_error) => api_error.error_message,
+        Err(_) => {
+            let text = String::from_utf8_lossy(&body_bytes).trim().to_string();
+            if text.is_empty() {
+                status
+                    .canonical_reason()
+                    .unwrap_or("Unknown error")
+                    .to_string()
+            } else {
+                text
+            }
+        }
+    };
+
     Error::ApiError(ApiError {
-        message: api_error_response.error_message,
+        message,
         status: status_code,
     })
 }
 
-async fn process_response<T: DeserializeOwned>(
-    response: reqwest::Response,
-) -> Result<T> {
+async fn process_response<T: DeserializeOwned>(response: reqwest::Response) -> Result<T> {
     if response.status().is_success() {
-        return Ok(response.json::<T>().await?);
+        let body_bytes = response.bytes().await?;
+        if tracing::enabled!(tracing::Level::TRACE) {
+            if let Ok(str_body) = std::str::from_utf8(&body_bytes) {
+                if !str_body.is_empty() {
+                    trace!("Response body: {}", str_body);
+                }
+            }
+        }
+        return Ok(serde_json::from_slice::<T>(&body_bytes)?);
     }
 
     Err(parse_api_error(response).await)
 }
 
-#[derive(Default)]
-struct LoggingMiddleware;
+impl Client {
+    /// Returns a clone of the client configured with the given OAuth bearer token.
+    pub fn with_bearer_token<S: AsRef<str>>(&self, bearer_token: S) -> Result<Self> {
+        let mut auth_value = HeaderValue::from_str(&format!("Bearer {}", bearer_token.as_ref()))?;
+        auth_value.set_sensitive(true);
+        let mut cloned = self.clone();
+        cloned.bearer_token = Some(auth_value);
+        Ok(cloned)
+    }
 
-#[async_trait::async_trait]
-impl Middleware for LoggingMiddleware {
-    async fn handle(
-        &self,
-        req: reqwest::Request,
-        extensions: &mut Extensions,
-        next: Next<'_>,
-    ) -> reqwest_middleware::Result<reqwest::Response> {
+    fn request(&self, method: Method, path: &str) -> reqwest::RequestBuilder {
+        let url = format!("{}{}", self.base_url, path);
+        let mut req = self.client.request(method, url);
+        if let Some(ref l) = self.lang {
+            req = req.query(&[("lang", l)]);
+        }
+        if let Some(ref token) = self.bearer_token {
+            req = req.header(reqwest::header::AUTHORIZATION, token.clone());
+        }
+        req
+    }
+
+    async fn send_request(&self, req: reqwest::RequestBuilder) -> Result<reqwest::Response> {
+        let built_req = req.build()?;
         let span = info_span!(
             "Request",
-            method = %req.method(),
-            url = %req.url(),
+            method = %built_req.method(),
+            url = %built_req.url(),
         );
 
         async move {
-            trace!("Request headers: {:?}", req.headers());
-            if let Some(body) = req.body() {
-                if let Some(bytes) = body.as_bytes() {
-                    if let Ok(str_body) = std::str::from_utf8(bytes) {
-                        trace!("Request body: {}", str_body);
-                    }
+            trace!("Request headers: {:?}", built_req.headers());
+            if let Some(body) = built_req.body().and_then(|b| b.as_bytes()) {
+                if let Ok(str_body) = std::str::from_utf8(body) {
+                    trace!("Request body: {}", str_body);
                 }
             }
 
-            let res = next.run(req, extensions).await;
-
-            match res {
+            match self.client.execute(built_req).await {
                 Ok(response) => {
-                    let status = response.status();
-                    let headers = response.headers().clone();
-                    let body_bytes = match response.bytes().await {
-                        Ok(bytes) => bytes,
-                        Err(e) => {
-                            return Err(reqwest_middleware::Error::Reqwest(e));
-                        }
-                    };
-
-                    trace!("Response status: {}", status);
-                    trace!("Response headers: {:?}", headers);
-                    if let Ok(str_body) = std::str::from_utf8(&body_bytes) {
-                        if !str_body.is_empty() {
-                            trace!("Response body: {}", str_body);
-                        }
-                    }
-
-                    let new_body = reqwest::Body::from(body_bytes);
-                    let mut new_response_builder = http::Response::builder()
-                        .status(status);
-                    *new_response_builder.headers_mut().unwrap() = headers;
-                    let new_response = new_response_builder.body(new_body).unwrap();
-
-                    Ok(reqwest::Response::from(new_response))
+                    trace!("Response status: {}", response.status());
+                    trace!("Response headers: {:?}", response.headers());
+                    Ok(response)
                 }
                 Err(e) => {
                     trace!("Request failed: {:?}", e);
-                    Err(e)
+                    Err(e.into())
                 }
             }
         }
         .instrument(span)
         .await
     }
-}
 
-macro_rules! add_lang_param {
-    ($self:expr, $req:expr) => {
-        if let Some(ref l) = $self.lang {
-            $req = $req.query(&[("lang", l)]);
-        }
-    };
-}
-
-impl Client {
     async fn get_request<T, Q>(&self, path: &str, query: Option<&Q>) -> Result<T>
     where
         T: DeserializeOwned,
         Q: Serialize + ?Sized,
     {
-        let url = format!("{}{}", self.base_url, path);
-        let mut req = self.client.get(&url);
-        add_lang_param!(self, req);
+        let mut req = self.request(Method::GET, path);
         if let Some(q) = query {
             req = req.query(q);
         }
-        let response = req.send().await?;
+        let response = self.send_request(req).await?;
         process_response(response).await
     }
 
@@ -244,61 +252,48 @@ impl Client {
             total_items: Option<i64>,
         }
 
+        let start_page = params.page.unwrap_or(1);
         let initial_state = State {
             client: self.clone(),
             params,
-            current_page: 1,
+            current_page: start_page,
             buffer: Vec::new().into_iter(),
             items_fetched: 0,
             total_items: None,
         };
 
-        stream::unfold(initial_state, |mut state| async move {
-            // Stop if we have fetched all items OR if the last page was empty.
+        stream::try_unfold(initial_state, |mut state| async move {
+            // Stop if we have fetched all items.
             if let Some(total) = state.total_items {
                 if state.items_fetched >= total {
-                    return None;
+                    return Ok(None);
                 }
             }
 
             // If we have items in the buffer, return the next one
             if let Some(item) = state.buffer.next() {
                 state.items_fetched += 1;
-                return Some((Ok(item), state));
+                return Ok(Some((item, state)));
             }
 
             // Buffer is empty, fetch the next page
-            let mut params = state.params.clone();
-            params = params.page(state.current_page);
+            let params = state.params.clone().page(state.current_page);
+            let response = state.client.search_types(&params).await?;
 
-            match state.client.search_types(&params).await {
-                Ok(response) => {
-                    if state.total_items.is_none() {
-                        state.total_items = Some(response.count);
-                    }
+            if state.total_items.is_none() {
+                state.total_items = Some(response.count);
+            }
 
-                    // If the page is empty, we're done for good.
-                    if response.types.is_empty() {
-                        return None;
-                    }
+            // Increment page number and refill buffer
+            state.current_page += 1;
+            state.buffer = response.types.into_iter();
 
-                    // Increment page number and refill buffer
-                    state.current_page += 1;
-                    state.buffer = response.types.into_iter();
-
-                    // Return the first item from the new buffer
-                    if let Some(item) = state.buffer.next() {
-                        state.items_fetched += 1;
-                        Some((Ok(item), state))
-                    } else {
-                        None
-                    }
-                }
-                Err(e) => {
-                    // On error, stop streaming and return the error
-                    state.total_items = Some(state.items_fetched); // Prevent further calls
-                    Some((Err(e), state))
-                }
+            // Return the first item from the new buffer
+            if let Some(item) = state.buffer.next() {
+                state.items_fetched += 1;
+                Ok(Some((item, state)))
+            } else {
+                Ok(None)
             }
         })
     }
@@ -392,14 +387,10 @@ impl Client {
         user_id: i64,
         item: &AddCollectedItemParams,
     ) -> Result<CollectedItem> {
-        let url = format!("{}/users/{}/collected_items", self.base_url, user_id);
-        let mut req = self.client.post(&url);
-        add_lang_param!(self, req);
-        let response = req
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(item)?)
-            .send()
-            .await?;
+        let req = self
+            .request(Method::POST, &format!("/users/{}/collected_items", user_id))
+            .json(item);
+        let response = self.send_request(req).await?;
         process_response(response).await
     }
 
@@ -430,17 +421,13 @@ impl Client {
         item_id: i64,
         item: &EditCollectedItemParams,
     ) -> Result<CollectedItem> {
-        let url = format!(
-            "{}/users/{}/collected_items/{}",
-            self.base_url, user_id, item_id
-        );
-        let mut req = self.client.patch(&url);
-        add_lang_param!(self, req);
-        let response = req
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(item)?)
-            .send()
-            .await?;
+        let req = self
+            .request(
+                Method::PATCH,
+                &format!("/users/{}/collected_items/{}", user_id, item_id),
+            )
+            .json(item);
+        let response = self.send_request(req).await?;
         process_response(response).await
     }
 
@@ -451,13 +438,11 @@ impl Client {
     /// * `user_id` - The ID of the user.
     /// * `item_id` - The ID of the item to delete.
     pub async fn delete_collected_item(&self, user_id: i64, item_id: i64) -> Result<()> {
-        let url = format!(
-            "{}/users/{}/collected_items/{}",
-            self.base_url, user_id, item_id
+        let req = self.request(
+            Method::DELETE,
+            &format!("/users/{}/collected_items/{}", user_id, item_id),
         );
-        let mut req = self.client.delete(&url);
-        add_lang_param!(self, req);
-        let response = req.send().await?;
+        let response = self.send_request(req).await?;
 
         if response.status().is_success() {
             return Ok(());
@@ -484,17 +469,11 @@ impl Client {
         &self,
         request: &SearchByImageParams,
     ) -> Result<SearchByImageResponse> {
-        let url = format!("{}/search_by_image", self.base_url);
-        let mut req = self.client.post(&url);
-        add_lang_param!(self, req);
+        let mut req = self.request(Method::POST, "/search_by_image");
         if let Some(activate) = request.activate_experimental_features {
             req = req.query(&[("activate_experimental_features", activate)]);
         }
-        let response = req
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(request)?)
-            .send()
-            .await?;
+        let response = self.send_request(req.json(request)).await?;
         process_response(response).await
     }
 }
@@ -552,27 +531,25 @@ impl ClientBuilder {
     pub fn build(self) -> Result<Client> {
         let mut headers = HeaderMap::new();
         if let Some(api_key) = self.api_key {
-            let mut auth_value = HeaderValue::from_str(&api_key).unwrap();
+            let mut auth_value = HeaderValue::from_str(&api_key)?;
             auth_value.set_sensitive(true);
             headers.insert("Numista-API-Key", auth_value);
         } else {
             return Err(Error::ApiKeyMissing);
         }
 
-        if let Some(bearer_token) = self.bearer_token {
-            let mut auth_value =
-                HeaderValue::from_str(&format!("Bearer {}", bearer_token)).unwrap();
-            auth_value.set_sensitive(true);
-            headers.insert("Authorization", auth_value);
-        }
+        let bearer_token = match self.bearer_token {
+            Some(token) => {
+                let mut auth_value = HeaderValue::from_str(&format!("Bearer {}", token))?;
+                auth_value.set_sensitive(true);
+                Some(auth_value)
+            }
+            None => None,
+        };
 
-        let reqwest_client = reqwest::Client::builder()
+        let client = reqwest::Client::builder()
             .default_headers(headers)
             .build()?;
-
-        let client = MiddlewareClientBuilder::new(reqwest_client)
-            .with(LoggingMiddleware)
-            .build();
 
         let base_url = self
             .base_url
@@ -584,6 +561,7 @@ impl ClientBuilder {
             client,
             base_url,
             lang,
+            bearer_token,
         })
     }
 }
@@ -608,5 +586,11 @@ mod tests {
             Error::ApiKeyMissing => (),
             _ => panic!("Expected ApiKeyMissing error"),
         }
+    }
+
+    #[test]
+    fn build_client_invalid_header_value_test() {
+        let client = ClientBuilder::new().api_key("bad\nkey").build();
+        assert!(matches!(client, Err(Error::InvalidHeaderValue(_))));
     }
 }

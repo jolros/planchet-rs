@@ -2,8 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use planchet::{
     model::{
-        GetCollectedItemsParams, GetSalesRecordsParams, GrantType, OAuthTokenParams,
-        SearchTypesParams,
+        GetCollectedItemsParams, GetSalesRecordsParams, OAuthTokenParams, SearchTypesParams,
     },
     ClientBuilder,
 };
@@ -44,14 +43,10 @@ async fn main() -> Result<()> {
 
     println!("Calling get_oauth_token()");
     let pre_auth_client = ClientBuilder::new().api_key(&cli.api_key).build()?;
-    let params = OAuthTokenParams::new(GrantType::ClientCredentials)
-        .scope("view_collection");
+    let params = OAuthTokenParams::client_credentials().scope("view_collection");
     let token = pre_auth_client.get_oauth_token(&params).await?;
 
-    let client = ClientBuilder::new()
-        .api_key(&cli.api_key)
-        .bearer_token(&token.access_token)
-        .build()?;
+    let client = pre_auth_client.with_bearer_token(&token.access_token)?;
 
     println!("Successfully authenticated!");
 
